@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "mastodon_access_token" text;

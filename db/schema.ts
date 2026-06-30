@@ -34,6 +34,8 @@ export const users = pgTable(
       .defaultNow(),
     /** 非表示（アーカイブ）日時。null=表示中。脱落・除名時に設定する */
     archivedAt: timestamp("archived_at", { withTimezone: true }),
+    /** Mastodonのアクセストークン（本人名義の投稿に使用。Mastodonログイン時のみ保存）*/
+    mastodonAccessToken: text("mastodon_access_token"),
   },
   (t) => [unique("users_provider_uid_unique").on(t.provider, t.providerUid)],
 );

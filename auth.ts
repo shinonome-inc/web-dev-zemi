@@ -24,7 +24,8 @@ function Mastodon(
     type: "oauth",
     authorization: {
       url: `${instance}/oauth/authorize`,
-      params: { scope: "read:accounts" },
+      // read:accounts=プロフィール取得 / write:statuses=本人名義の投稿（自動トゥート）
+      params: { scope: "read:accounts write:statuses" },
     },
     token: `${instance}/oauth/token`,
     userinfo: `${instance}/api/v1/accounts/verify_credentials`,
@@ -91,6 +92,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           avatarUrl: user.image,
           mastodonAcct: acct,
           email: user.email,
+          // Mastodonログイン時のみアクセストークンを保存（自動トゥート用）
+          mastodonAccessToken:
+            account.provider === "mastodon"
+              ? (account.access_token as string | undefined)
+              : undefined,
         });
         token.uid = dbUser.id;
         token.role = dbUser.role;
