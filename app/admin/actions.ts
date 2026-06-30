@@ -3,9 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth-guard";
 import { countStaff, getUserById, updateUserRole } from "@/db/admin";
-
-export const ROLES = ["student", "staff", "graduate"] as const;
-type Role = (typeof ROLES)[number];
+import { ROLES, type Role } from "@/lib/roles";
 
 /** staffがユーザーのロールを変更する。最後のstaffの降格は拒否する。 */
 export async function changeUserRole(
