@@ -96,3 +96,18 @@ export function getCurriculumParts(slug: string): CurriculumParts | null {
     after: lines.slice(end + 1).join("\n"),
   };
 }
+
+export type CurriculumWeekItems = CurriculumMeta & { items: ChecklistItem[] };
+
+/** 全週の進捗項目（マニフェスト）を学習順に返す。集計・詳細表示に使う。 */
+export function getCurriculumManifest(): CurriculumWeekItems[] {
+  return getCurriculumList().flatMap((meta) => {
+    const parts = getCurriculumParts(meta.slug);
+    return parts ? [{ ...meta, items: parts.items }] : [];
+  });
+}
+
+/** 全週合計の進捗項目数（進捗率の分母）。 */
+export function getTotalItemCount(): number {
+  return getCurriculumManifest().reduce((sum, w) => sum + w.items.length, 0);
+}
