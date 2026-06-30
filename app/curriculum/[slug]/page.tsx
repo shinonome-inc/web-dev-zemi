@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getCurriculumContent, getCurriculumList } from "@/lib/curriculum";
+import { getCurriculumList, getCurriculumParts } from "@/lib/curriculum";
+import { ProgressChecklist } from "@/components/progress-checklist";
 
 export function generateStaticParams() {
   return getCurriculumList().map((item) => ({ slug: item.slug }));
@@ -14,10 +15,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = getCurriculumContent(slug);
+  const parts = getCurriculumParts(slug);
   return {
-    title: item
-      ? `${item.title} | はじめてのWEB開発ゼミ ポータル`
+    title: parts
+      ? `${parts.title} | はじめてのWEB開発ゼミ ポータル`
       : "カリキュラム",
   };
 }
@@ -28,12 +29,12 @@ export default async function CurriculumDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = getCurriculumContent(slug);
-  if (!item) notFound();
+  const parts = getCurriculumParts(slug);
+  if (!parts) notFound();
 
   const list = getCurriculumList();
-  const prev = list[item.order - 1];
-  const next = list[item.order + 1];
+  const prev = list[parts.order - 1];
+  const next = list[parts.order + 1];
 
   return (
     <article className="space-y-8">
@@ -43,11 +44,12 @@ export default async function CurriculumDetailPage({
         </Link>
       </div>
 
-      <div
-        className="prose max-w-none prose-headings:scroll-mt-20 prose-a:text-primary"
-        data-curriculum-slug={item.slug}
-      >
-        <Markdown remarkPlugins={[remarkGfm]}>{item.content}</Markdown>
+      <div className="prose max-w-none prose-headings:scroll-mt-20 prose-a:text-primary">
+        <Markdown remarkPlugins={[remarkGfm]}>{parts.before}</Markdown>
+        <ProgressChecklist items={parts.items} weekSlug={parts.slug} />
+        {parts.after && (
+          <Markdown remarkPlugins={[remarkGfm]}>{parts.after}</Markdown>
+        )}
       </div>
 
       <nav className="flex justify-between gap-4 border-t border-base-300 pt-6">

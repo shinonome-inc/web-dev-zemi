@@ -25,8 +25,6 @@ export type CurriculumMeta = {
   order: number;
 };
 
-export type CurriculumContent = CurriculumMeta & { content: string };
-
 function readRaw(slug: string): string | null {
   const file = path.join(CURRICULUM_DIR, `${slug}.md`);
   if (!fs.existsSync(file)) return null;
@@ -55,11 +53,46 @@ export function getCurriculumList(): CurriculumMeta[] {
   });
 }
 
-/** 指定スラッグのカリキュラム本文とメタ情報を返す。無ければ null。 */
-export function getCurriculumContent(slug: string): CurriculumContent | null {
+export type ChecklistItem = { id: string; text: string };
+export type CurriculumParts = CurriculumMeta & {
+  /** チェックリスト直前までの本文 */
+  before: string;
+  /** 進捗項目（GFMタスクリスト）。IDは `<slug>:c<連番>` */
+  items: ChecklistItem[];
+  /** チェックリスト以降の本文 */
+  after: string;
+};
+
+const TASK_ITEM = /^- \[[ xX]\]\s+(.*)$/;
+
+/**
+ * 本文を「チェックリスト前 / チェックリスト項目 / チェックリスト後」に分割して返す。
+ * 進捗はこの項目単位で保存する（各ファイルのタスクリストは1ブロックのみを想定）。
+ */
+export function getCurriculumParts(slug: string): CurriculumParts | null {
   const raw = readRaw(slug);
   if (raw === null) return null;
   const meta = getCurriculumList().find((item) => item.slug === slug);
   if (!meta) return null;
-  return { ...meta, content: raw };
+
+  const lines = raw.split("\n");
+  const start = lines.findIndex((line) => TASK_ITEM.test(line));
+  if (start === -1) {
+    return { ...meta, before: raw, items: [], after: "" };
+  }
+
+  let end = start;
+  while (end + 1 < lines.length && TASK_ITEM.test(lines[end + 1])) end++;
+
+  const items = lines.slice(start, end + 1).map((line, index) => ({
+    id: `${slug}:c${index}`,
+    text: (line.match(TASK_ITEM)?.[1] ?? "").trim(),
+  }));
+
+  return {
+    ...meta,
+    before: lines.slice(0, start).join("\n"),
+    items,
+    after: lines.slice(end + 1).join("\n"),
+  };
 }
