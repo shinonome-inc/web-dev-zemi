@@ -41,6 +41,7 @@ export default async function AdminDashboardPage() {
       daysInactive,
       inactive: daysInactive > INACTIVE_AFTER_DAYS,
       archived: u.archivedAt !== null,
+      attendanceCount: u.attendanceCount,
     };
   });
 
