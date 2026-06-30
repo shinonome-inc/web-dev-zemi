@@ -1,4 +1,5 @@
 import {
+  date,
   pgEnum,
   pgTable,
   text,
@@ -56,6 +57,37 @@ export const progress = pgTable(
   (t) => [unique("progress_user_item_unique").on(t.userId, t.itemId)],
 );
 
+/** ゼミ会（受講生会）。アーカイブとして閲覧する */
+export const meetings = pgTable("meetings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  /** 開催日（YYYY-MM-DD） */
+  heldOn: date("held_on").notNull(),
+  title: text("title").notNull(),
+  /** 内容（Markdown） */
+  contentMd: text("content_md").notNull().default(""),
+  /** Google SlidesやPDFなどの資料URL（任意） */
+  slideUrl: text("slide_url"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/** ゼミ会の出席記録（行の存在＝出席） */
+export const meetingAttendance = pgTable(
+  "meeting_attendance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    meetingId: uuid("meeting_id")
+      .notNull()
+      .references(() => meetings.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => [unique("meeting_attendance_unique").on(t.meetingId, t.userId)],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Progress = typeof progress.$inferSelect;
+export type Meeting = typeof meetings.$inferSelect;

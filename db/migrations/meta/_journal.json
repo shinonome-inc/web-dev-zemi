@@ -15,6 +15,13 @@
       "when": 1782835630874,
       "tag": "0001_foamy_microbe",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782836287561,
+      "tag": "0002_slim_longshot",
+      "breakpoints": true
     }
   ]
 }
