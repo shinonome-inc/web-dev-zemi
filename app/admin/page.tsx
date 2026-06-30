@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth-guard";
 import { getUsersProgressSummary } from "@/db/admin";
 import { getTotalItemCount } from "@/lib/curriculum";
+import { RoleSelect } from "@/components/role-select";
 
 export const metadata = { title: "運営ダッシュボード | はじめてのWEB開発ゼミ" };
 
@@ -57,7 +58,7 @@ export default async function AdminDashboardPage() {
                     )}
                   </td>
                   <td>
-                    <span className="badge badge-ghost badge-sm">{u.role}</span>
+                    <RoleSelect userId={u.id} role={u.role} />
                   </td>
                   <td>
                     <div className="flex items-center gap-2">
