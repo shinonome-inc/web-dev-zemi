@@ -41,21 +41,21 @@ export default async function EditMeetingPage({
         <DeleteMeetingButton id={meeting.id} />
       </div>
 
-      <MeetingForm meeting={meeting} />
-
-      <div className="space-y-3 border-t border-base-300 pt-6">
-        <h2 className="font-bold">
-          出席管理
-          <span className="ml-2 text-sm font-normal text-base-content/60">
-            ({attendeeIds.length}人 出席)
-          </span>
-        </h2>
-        <AttendanceEditor
-          meetingId={meeting.id}
-          users={users}
-          attendeeIds={attendeeIds}
-        />
-      </div>
+      <MeetingForm meeting={meeting}>
+        <div className="space-y-3 border-t border-base-300 pt-6">
+          <h2 className="font-bold">
+            出席管理
+            <span className="ml-2 text-sm font-normal text-base-content/60">
+              ({attendeeIds.length}人 出席)
+            </span>
+          </h2>
+          <AttendanceEditor
+            meetingId={meeting.id}
+            users={users}
+            attendeeIds={attendeeIds}
+          />
+        </div>
+      </MeetingForm>
     </section>
   );
 }

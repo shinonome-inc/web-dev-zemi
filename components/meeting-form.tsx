@@ -4,7 +4,13 @@ import { useState, useTransition } from "react";
 import { saveMeeting } from "@/app/admin/meetings/actions";
 import type { Meeting } from "@/db/schema";
 
-export function MeetingForm({ meeting }: { meeting?: Meeting }) {
+export function MeetingForm({
+  meeting,
+  children,
+}: {
+  meeting?: Meeting;
+  children?: React.ReactNode;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -71,6 +77,8 @@ export function MeetingForm({ meeting }: { meeting?: Meeting }) {
           className="textarea textarea-bordered w-full font-mono text-sm"
         />
       </div>
+
+      {children}
 
       {error && <p className="text-sm text-error">{error}</p>}
 
