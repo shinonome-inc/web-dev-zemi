@@ -89,7 +89,11 @@ export default async function MeetingArchiveDetailPage({
         </div>
       )}
 
-      <CommentSection meetingId={meeting.id} comments={comments} />
+      <CommentSection
+        meetingId={meeting.id}
+        comments={comments}
+        canToot={session.user.provider === "mastodon"}
+      />
     </article>
   );
 }

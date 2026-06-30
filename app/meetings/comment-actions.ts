@@ -8,20 +8,51 @@ import {
   getComment,
   updateComment,
 } from "@/db/comments";
+import { getMeeting } from "@/db/meetings";
+import { getUserMastodonToken } from "@/db/users";
+import { postStatus } from "@/lib/mastodon";
 
-type Result = { ok: boolean; error?: string };
+type Result = { ok: boolean; error?: string; tootWarning?: string };
 
-/** コメント投稿（ログインユーザー全員）。 */
+/** コメント本文からトゥート文面を組み立て、本人名義で投稿。失敗時は警告文を返す。 */
+async function tryToot(
+  userId: string,
+  meetingId: string,
+  body: string,
+): Promise<string | undefined> {
+  const instance = process.env.MASTODON_INSTANCE;
+  const token = await getUserMastodonToken(userId);
+  if (!instance || !token) {
+    return "Mastodon連携の再ログインが必要です（投稿はスキップしました）";
+  }
+  const meeting = await getMeeting(meetingId);
+  const date = meeting ? meeting.heldOn.replaceAll("-", "") : "";
+  const status = `${body}\n\n#WEB開発ゼミ #ゼミ会 #${date}`;
+  try {
+    await postStatus({ instance, token, status, visibility: "public" });
+    return undefined;
+  } catch {
+    return "Mastodonへの投稿に失敗しました（再ログインが必要かもしれません）";
+  }
+}
+
+/** コメント投稿（ログインユーザー全員）。alsoToot=true でMastodonにも投稿。 */
 export async function postComment(
   meetingId: string,
   body: string,
+  alsoToot = false,
 ): Promise<Result> {
   const session = await requireUser();
   const text = body.trim();
   if (!text) return { ok: false, error: "コメントを入力してください" };
   await addComment(meetingId, session.user.id, text);
   revalidatePath(`/meetings/${meetingId}`);
-  return { ok: true };
+
+  let tootWarning: string | undefined;
+  if (alsoToot) {
+    tootWarning = await tryToot(session.user.id, meetingId, text);
+  }
+  return { ok: true, tootWarning };
 }
 
 /** 投稿者本人 or staff のみ許可。 */

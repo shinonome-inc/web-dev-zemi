@@ -19,24 +19,30 @@ export type CommentView = {
 export function CommentSection({
   meetingId,
   comments,
+  canToot,
 }: {
   meetingId: string;
   comments: CommentView[];
+  /** Mastodonログインユーザーのみ自動トゥートのチェックを出す */
+  canToot: boolean;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
+  const [alsoToot, setAlsoToot] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [pending, startTransition] = useTransition();
 
   function onPost() {
     startTransition(async () => {
-      const res = await postComment(meetingId, body);
-      if (!res.ok) window.alert(res.error ?? "投稿に失敗しました");
-      else {
-        setBody("");
-        router.refresh();
+      const res = await postComment(meetingId, body, canToot && alsoToot);
+      if (!res.ok) {
+        window.alert(res.error ?? "投稿に失敗しました");
+        return;
       }
+      setBody("");
+      router.refresh();
+      if (res.tootWarning) window.alert(res.tootWarning);
     });
   }
 
@@ -147,14 +153,29 @@ export function CommentSection({
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          disabled={pending || !body.trim()}
-          onClick={onPost}
-        >
-          投稿
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          {canToot ? (
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm checkbox-primary"
+                checked={alsoToot}
+                onChange={(e) => setAlsoToot(e.target.checked)}
+              />
+              Mastodonにも投稿する
+            </label>
+          ) : (
+            <span />
+          )}
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={pending || !body.trim()}
+            onClick={onPost}
+          >
+            投稿
+          </button>
+        </div>
       </div>
     </section>
   );
