@@ -13,4 +13,12 @@ body {
   font-family:
     system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP",
     Meiryo, sans-serif;
+  /* UIテキスト上で文字入力用のI-beamカーソルを出さない（テキスト選択は可能なまま） */
+  cursor: default;
+}
+
+/* 入力欄だけはテキストカーソルに戻す */
+input:where([type="text"], [type="url"], [type="date"], [type="email"], [type="search"], [type="password"]),
+textarea {
+  cursor: text;
 }
