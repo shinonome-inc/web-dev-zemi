@@ -27,7 +27,9 @@ function Mastodon(
     },
     token: `${instance}/oauth/token`,
     userinfo: `${instance}/api/v1/accounts/verify_credentials`,
-    checks: ["state"],
+    // state(暗号化JWE)はURLが長くなりMastodon側の認可処理が502になることがあるため、
+    // 短いcode_challengeで済むPKCEを使う（Mastodon 4.3+対応）。
+    checks: ["pkce"],
     profile(profile) {
       return {
         id: profile.id,
