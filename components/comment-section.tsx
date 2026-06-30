@@ -2,11 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import {
-  editComment,
-  postComment,
-  removeComment,
-} from "@/app/meetings/comment-actions";
+import { postComment, removeComment } from "@/app/meetings/comment-actions";
 
 export type CommentView = {
   id: string;
@@ -19,35 +15,28 @@ export type CommentView = {
 export function CommentSection({
   meetingId,
   comments,
+  canToot,
 }: {
   meetingId: string;
   comments: CommentView[];
+  /** Mastodonログインユーザーのみ自動トゥートのチェックを出す */
+  canToot: boolean;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editBody, setEditBody] = useState("");
+  const [alsoToot, setAlsoToot] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function onPost() {
     startTransition(async () => {
-      const res = await postComment(meetingId, body);
-      if (!res.ok) window.alert(res.error ?? "投稿に失敗しました");
-      else {
-        setBody("");
-        router.refresh();
+      const res = await postComment(meetingId, body, canToot && alsoToot);
+      if (!res.ok) {
+        window.alert(res.error ?? "投稿に失敗しました");
+        return;
       }
-    });
-  }
-
-  function onSaveEdit(id: string) {
-    startTransition(async () => {
-      const res = await editComment(id, editBody);
-      if (!res.ok) window.alert(res.error ?? "更新に失敗しました");
-      else {
-        setEditingId(null);
-        router.refresh();
-      }
+      setBody("");
+      router.refresh();
+      if (res.tootWarning) window.alert(res.tootWarning);
     });
   }
 
@@ -77,58 +66,18 @@ export function CommentSection({
               <span>{c.createdAtLabel}</span>
             </div>
 
-            {editingId === c.id ? (
-              <div className="space-y-2">
-                <textarea
-                  className="textarea textarea-bordered w-full text-sm"
-                  rows={3}
-                  value={editBody}
-                  onChange={(e) => setEditBody(e.target.value)}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-xs"
-                    disabled={pending}
-                    onClick={() => onSaveEdit(c.id)}
-                  >
-                    保存
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-xs"
-                    onClick={() => setEditingId(null)}
-                  >
-                    キャンセル
-                  </button>
-                </div>
+            <p className="whitespace-pre-wrap text-sm">{c.body}</p>
+            {c.canModify && (
+              <div className="mt-1 flex gap-3 text-xs">
+                <button
+                  type="button"
+                  className="link link-hover text-error"
+                  disabled={pending}
+                  onClick={() => onDelete(c.id)}
+                >
+                  削除
+                </button>
               </div>
-            ) : (
-              <>
-                <p className="whitespace-pre-wrap text-sm">{c.body}</p>
-                {c.canModify && (
-                  <div className="mt-1 flex gap-3 text-xs">
-                    <button
-                      type="button"
-                      className="link link-hover text-base-content/60"
-                      onClick={() => {
-                        setEditingId(c.id);
-                        setEditBody(c.body);
-                      }}
-                    >
-                      編集
-                    </button>
-                    <button
-                      type="button"
-                      className="link link-hover text-error"
-                      disabled={pending}
-                      onClick={() => onDelete(c.id)}
-                    >
-                      削除
-                    </button>
-                  </div>
-                )}
-              </>
             )}
           </li>
         ))}
@@ -147,14 +96,29 @@ export function CommentSection({
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
-        <button
-          type="button"
-          className="btn btn-primary btn-sm"
-          disabled={pending || !body.trim()}
-          onClick={onPost}
-        >
-          投稿
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          {canToot ? (
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm checkbox-primary"
+                checked={alsoToot}
+                onChange={(e) => setAlsoToot(e.target.checked)}
+              />
+              Mastodonにも投稿する
+            </label>
+          ) : (
+            <span />
+          )}
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={pending || !body.trim()}
+            onClick={onPost}
+          >
+            投稿
+          </button>
+        </div>
       </div>
     </section>
   );
