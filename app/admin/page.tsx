@@ -39,11 +39,14 @@ export default async function AdminDashboardPage() {
       lastActiveLabel: formatDate(lastActive),
       daysInactive,
       inactive: daysInactive > INACTIVE_AFTER_DAYS,
+      archived: u.archivedAt !== null,
     };
   });
 
-  const studentCount = rows.filter((r) => r.role === "student").length;
-  const inactiveCount = rows.filter((r) => r.inactive).length;
+  // 集計はアーカイブ済みを除外
+  const active = rows.filter((r) => !r.archived);
+  const studentCount = active.filter((r) => r.role === "student").length;
+  const inactiveCount = active.filter((r) => r.inactive).length;
 
   return (
     <section className="space-y-6">
@@ -62,7 +65,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="rounded-lg border border-base-300 bg-base-100 px-5 py-3">
           <div className="text-xs text-base-content/60">登録ユーザー合計</div>
-          <div className="text-2xl font-bold tabular-nums">{rows.length}人</div>
+          <div className="text-2xl font-bold tabular-nums">{active.length}人</div>
         </div>
         <div className="rounded-lg border border-base-300 bg-base-100 px-5 py-3">
           <div className="text-xs text-base-content/60">非アクティブ</div>

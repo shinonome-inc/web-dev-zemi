@@ -10,6 +10,8 @@ export type UserProgressSummary = {
   lastSeenAt: Date;
   /** 最後に進捗チェックした日時（未チェックなら null） */
   lastCheckedAt: Date | null;
+  /** 非表示（アーカイブ）日時。null=表示中 */
+  archivedAt: Date | null;
   completed: number;
 };
 
@@ -23,12 +25,24 @@ export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> 
       role: users.role,
       lastSeenAt: users.lastSeenAt,
       lastCheckedAt: max(progress.completedAt),
+      archivedAt: users.archivedAt,
       completed: count(progress.id),
     })
     .from(users)
     .leftJoin(progress, eq(progress.userId, users.id))
     .groupBy(users.id)
     .orderBy(desc(users.lastSeenAt));
+}
+
+/** ユーザーの非表示（アーカイブ）状態を切り替える。 */
+export async function setUserArchived(
+  userId: string,
+  archived: boolean,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ archivedAt: archived ? new Date() : null })
+    .where(eq(users.id, userId));
 }
 
 /** 指定ユーザーの基本情報。 */

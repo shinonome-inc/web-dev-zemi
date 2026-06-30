@@ -31,6 +31,8 @@ export const users = pgTable(
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /** 非表示（アーカイブ）日時。null=表示中。脱落・除名時に設定する */
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (t) => [unique("users_provider_uid_unique").on(t.provider, t.providerUid)],
 );

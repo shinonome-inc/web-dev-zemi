@@ -8,6 +8,13 @@
       "when": 1782803714659,
       "tag": "0000_zippy_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782835630874,
+      "tag": "0001_foamy_microbe",
+      "breakpoints": true
     }
   ]
 }
