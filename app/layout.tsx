@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
+import { AuthButton } from "@/components/auth-button";
 
 export const metadata: Metadata = {
   title: "はじめてのWEB開発ゼミ ポータル",
@@ -15,23 +17,26 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="min-h-screen bg-base-200 text-base-content">
-        <div className="flex min-h-screen flex-col">
-          <header className="navbar border-b border-base-300 bg-base-100">
-            <div className="mx-auto w-full max-w-5xl px-4">
-              <a href="/" className="text-lg font-bold">
-                はじめてのWEB開発ゼミ
-              </a>
-            </div>
-          </header>
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            <header className="navbar border-b border-base-300 bg-base-100">
+              <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4">
+                <a href="/" className="text-lg font-bold">
+                  はじめてのWEB開発ゼミ
+                </a>
+                <AuthButton />
+              </div>
+            </header>
 
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
-            {children}
-          </main>
+            <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+              {children}
+            </main>
 
-          <footer className="border-t border-base-300 py-6 text-center text-sm text-base-content/60">
-            はじめてのWEB開発ゼミ ポータル
-          </footer>
-        </div>
+            <footer className="border-t border-base-300 py-6 text-center text-sm text-base-content/60">
+              はじめてのWEB開発ゼミ ポータル
+            </footer>
+          </div>
+        </Providers>
       </body>
     </html>
   );
