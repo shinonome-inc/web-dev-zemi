@@ -87,6 +87,24 @@ export const meetingAttendance = pgTable(
   (t) => [unique("meeting_attendance_unique").on(t.meetingId, t.userId)],
 );
 
+/** ゼミ会へのコメント */
+export const meetingComments = pgTable("meeting_comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  meetingId: uuid("meeting_id")
+    .notNull()
+    .references(() => meetings.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Progress = typeof progress.$inferSelect;
