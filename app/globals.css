@@ -1,0 +1,107 @@
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e3e6ea;
+  --text: #1f2329;
+  --muted: #5b6470;
+  --accent: #3b6ef5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c;
+    --surface: #1c2026;
+    --border: #2c323a;
+    --text: #e9edf2;
+    --muted: #9aa4b2;
+    --accent: #6f97ff;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    Meiryo, sans-serif;
+  line-height: 1.7;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.app-brand {
+  display: inline-block;
+  padding: 16px 24px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.app-footer {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+}
+
+.hero-title {
+  font-size: 1.9rem;
+  margin: 0 0 12px;
+}
+
+.hero-lead {
+  color: var(--muted);
+  max-width: 640px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+.card-text {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
