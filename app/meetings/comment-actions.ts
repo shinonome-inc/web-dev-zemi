@@ -26,8 +26,9 @@ async function tryToot(
     return "Mastodon連携の再ログインが必要です（投稿はスキップしました）";
   }
   const meeting = await getMeeting(meetingId);
+  // Mastodonのハッシュタグは数字のみだと無効なため先頭に d を付ける（例: #d20260701）
   const date = meeting ? meeting.heldOn.replaceAll("-", "") : "";
-  const status = `${body}\n\n#WEB開発ゼミ #ゼミ会 #${date}`;
+  const status = `${body}\n\n#WEB開発ゼミ #ゼミ会 #d${date}`;
   try {
     await postStatus({ instance, token, status, visibility: "public" });
     return undefined;
