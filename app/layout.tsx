@@ -14,16 +14,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body>
-        <div className="app-shell">
-          <header className="app-header">
-            <a className="app-brand" href="/">
-              はじめてのWEB開発ゼミ
-            </a>
+      <body className="min-h-screen bg-base-200 text-base-content">
+        <div className="flex min-h-screen flex-col">
+          <header className="navbar border-b border-base-300 bg-base-100">
+            <div className="mx-auto w-full max-w-5xl px-4">
+              <a href="/" className="text-lg font-bold">
+                はじめてのWEB開発ゼミ
+              </a>
+            </div>
           </header>
-          <main className="app-main">{children}</main>
-          <footer className="app-footer">
-            <small>はじめてのWEB開発ゼミ ポータル</small>
+
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+            {children}
+          </main>
+
+          <footer className="border-t border-base-300 py-6 text-center text-sm text-base-content/60">
+            はじめてのWEB開発ゼミ ポータル
           </footer>
         </div>
       </body>
