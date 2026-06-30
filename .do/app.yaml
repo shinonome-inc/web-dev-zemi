@@ -1,0 +1,54 @@
+# DigitalOcean App Platform 用のアプリ仕様。
+# 初回は GUI から作成してもよい。doctl を使う場合:
+#   doctl apps create --spec .do/app.yaml
+# SECRET 型の値はこのファイルには書かず、ダッシュボードで設定する。
+name: web-dev-zemi-portal
+region: sgp
+services:
+  - name: web
+    dockerfile_path: Dockerfile
+    http_port: 3000
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    github:
+      repo: shinonome-inc/web-dev-zemi
+      branch: dev
+      deploy_on_push: true
+    health_check:
+      http_path: /
+    envs:
+      # DB（Neonの本番ブランチの接続文字列）
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      # Auth.js
+      - key: AUTH_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      # Mastodonアクセストークンの暗号化キー（32バイトbase64）
+      - key: TOKEN_ENC_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: AUTH_URL
+        scope: RUN_TIME
+        # 例: https://web-dev-zemi-portal.ondigitalocean.app（独自ドメインならそれ）
+      - key: AUTH_TRUST_HOST
+        scope: RUN_TIME
+        value: "true"
+      # Mastodon（本番用OAuthアプリ）
+      - key: MASTODON_INSTANCE
+        scope: RUN_TIME
+        value: https://community.4nonome.com
+      - key: MASTODON_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: MASTODON_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      # Google（任意）
+      - key: GOOGLE_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: GOOGLE_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
