@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AuthButton } from "@/components/auth-button";
@@ -20,10 +21,20 @@ export default function RootLayout({
         <Providers>
           <div className="flex min-h-screen flex-col">
             <header className="navbar border-b border-base-300 bg-base-100">
-              <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4">
-                <a href="/" className="text-lg font-bold">
-                  はじめてのWEB開発ゼミ
-                </a>
+              <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4">
+                <div className="flex items-center gap-5">
+                  <Link href="/" className="text-lg font-bold">
+                    はじめてのWEB開発ゼミ
+                  </Link>
+                  <nav className="flex items-center gap-4 text-sm">
+                    <Link href="/curriculum" className="hover:text-primary">
+                      カリキュラム
+                    </Link>
+                    <Link href="/meetings" className="hover:text-primary">
+                      ゼミ会
+                    </Link>
+                  </nav>
+                </div>
                 <AuthButton />
               </div>
             </header>

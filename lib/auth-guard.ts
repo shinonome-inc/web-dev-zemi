@@ -20,3 +20,10 @@ export async function requireStaff() {
   if (row?.role !== "staff") notFound();
   return session;
 }
+
+/** ログイン必須ページのガード。未ログインは /login へ。 */
+export async function requireUser() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+  return session;
+}
