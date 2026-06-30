@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "./index";
 import { users } from "./schema";
+import { decryptToken, encryptToken } from "@/lib/crypto";
 
 type UpsertUserInput = {
   provider: string;
@@ -22,10 +23,16 @@ export async function upsertUser(
   input: UpsertUserInput,
 ): Promise<{ id: string; role: (typeof users.$inferSelect)["role"] }> {
   const now = new Date();
-  // トークンは指定があるときだけ更新（Google再ログイン等で既存値を消さない）
+  // トークンは指定があるときだけ更新（Google再ログイン等で既存値を消さない）。
+  // 保存時にAES-256-GCMで暗号化する。
   const tokenSet =
     input.mastodonAccessToken !== undefined
-      ? { mastodonAccessToken: input.mastodonAccessToken }
+      ? {
+          mastodonAccessToken:
+            input.mastodonAccessToken === null
+              ? null
+              : encryptToken(input.mastodonAccessToken),
+        }
       : {};
   const [row] = await db
     .insert(users)
@@ -62,5 +69,5 @@ export async function getUserMastodonToken(
     .select({ token: users.mastodonAccessToken })
     .from(users)
     .where(eq(users.id, userId));
-  return row?.token ?? null;
+  return row?.token ? decryptToken(row.token) : null;
 }
