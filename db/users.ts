@@ -3,6 +3,20 @@ import { db } from "./index";
 import { users } from "./schema";
 import { decryptToken, encryptToken } from "@/lib/crypto";
 
+/** 暗号化に失敗してもログインは止めず、トークン保存だけスキップする。 */
+function safeEncryptToken(plain: string | null): string | null {
+  if (plain === null) return null;
+  try {
+    return encryptToken(plain);
+  } catch (e) {
+    console.error(
+      "[users] Mastodonトークンの暗号化に失敗（TOKEN_ENC_KEY未設定など）。保存をスキップします。",
+      e,
+    );
+    return null;
+  }
+}
+
 type UpsertUserInput = {
   provider: string;
   providerUid: string;
@@ -27,12 +41,7 @@ export async function upsertUser(
   // 保存時にAES-256-GCMで暗号化する。
   const tokenSet =
     input.mastodonAccessToken !== undefined
-      ? {
-          mastodonAccessToken:
-            input.mastodonAccessToken === null
-              ? null
-              : encryptToken(input.mastodonAccessToken),
-        }
+      ? { mastodonAccessToken: safeEncryptToken(input.mastodonAccessToken) }
       : {};
   const [row] = await db
     .insert(users)
