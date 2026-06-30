@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
+import { upsertUser } from "@/db/users";
 
 /** Mastodon の verify_credentials が返すプロフィール（必要分のみ） */
 interface MastodonProfile {
@@ -74,17 +75,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: buildProviders(),
   session: { strategy: "jwt" },
   callbacks: {
-    // サインイン時にどのプロバイダ経由か・Mastodonのacctを token に持たせる
-    jwt({ token, account, profile }) {
-      if (account) {
+    // サインイン時にユーザーをDBへupsertし、DBのユーザーID・provider・acctをtokenに持たせる
+    async jwt({ token, user, account, profile }) {
+      if (account && user) {
+        const acct =
+          account.provider === "mastodon" && profile
+            ? (profile as unknown as MastodonProfile).acct
+            : undefined;
         token.provider = account.provider;
-        if (account.provider === "mastodon" && profile) {
-          token.acct = (profile as unknown as MastodonProfile).acct;
-        }
+        token.acct = acct;
+        token.uid = await upsertUser({
+          provider: account.provider,
+          providerUid: account.providerAccountId,
+          displayName: user.name ?? "(no name)",
+          avatarUrl: user.image,
+          mastodonAcct: acct,
+          email: user.email,
+        });
       }
       return token;
     },
     session({ session, token }) {
+      session.user.id = token.uid as string;
       session.user.provider = token.provider as string | undefined;
       session.user.acct = token.acct as string | undefined;
       return session;
