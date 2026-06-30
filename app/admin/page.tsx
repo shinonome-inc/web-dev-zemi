@@ -1,13 +1,16 @@
-import Link from "next/link";
 import { requireStaff } from "@/lib/auth-guard";
 import { getUsersProgressSummary } from "@/db/admin";
 import { getTotalItemCount } from "@/lib/curriculum";
-import { RoleSelect } from "@/components/role-select";
+import { UsersTable, type UserRow } from "@/components/users-table";
 
 export const metadata = { title: "運営ダッシュボード | はじめてのWEB開発ゼミ" };
 
+/** これより長くログイン/チェックがないユーザーを非アクティブ扱いにする日数 */
+const INACTIVE_AFTER_DAYS = 10;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function formatDate(d: Date): string {
-  return new Date(d).toLocaleDateString("ja-JP", {
+  return d.toLocaleDateString("ja-JP", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -18,76 +21,61 @@ export default async function AdminDashboardPage() {
   await requireStaff();
 
   const total = getTotalItemCount();
-  const users = await getUsersProgressSummary();
+  const summary = await getUsersProgressSummary();
+  const now = Date.now();
+
+  const rows: UserRow[] = summary.map((u) => {
+    const lastChecked = u.lastCheckedAt ? new Date(u.lastCheckedAt) : null;
+    const lastActive =
+      lastChecked && lastChecked > u.lastSeenAt ? lastChecked : u.lastSeenAt;
+    const daysInactive = Math.floor((now - lastActive.getTime()) / DAY_MS);
+    return {
+      id: u.id,
+      displayName: u.displayName,
+      mastodonAcct: u.mastodonAcct,
+      role: u.role,
+      completed: u.completed,
+      pct: total > 0 ? Math.round((u.completed / total) * 100) : 0,
+      lastActiveLabel: formatDate(lastActive),
+      daysInactive,
+      inactive: daysInactive > INACTIVE_AFTER_DAYS,
+      archived: u.archivedAt !== null,
+    };
+  });
+
+  // 集計はアーカイブ済みを除外
+  const active = rows.filter((r) => !r.archived);
+  const studentCount = active.filter((r) => r.role === "student").length;
+  const inactiveCount = active.filter((r) => r.inactive).length;
 
   return (
     <section className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">運営ダッシュボード</h1>
         <p className="text-sm text-base-content/70">
-          受講生の進捗状況（全{total}項目）。行をクリックで詳細。
+          受講生の進捗状況（全{total}項目）。{INACTIVE_AFTER_DAYS}日を超えて
+          ログイン・チェックがないと「非アクティブ」になります。
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-base-300">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>名前</th>
-              <th>ロール</th>
-              <th className="w-64">進捗</th>
-              <th>最終ログイン</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => {
-              const pct = total > 0 ? Math.round((u.completed / total) * 100) : 0;
-              return (
-                <tr key={u.id} className="hover">
-                  <td>
-                    <Link
-                      href={`/admin/users/${u.id}`}
-                      className="link link-hover font-medium"
-                    >
-                      {u.displayName}
-                    </Link>
-                    {u.mastodonAcct && (
-                      <div className="text-xs text-base-content/50">
-                        {u.mastodonAcct}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    <RoleSelect userId={u.id} role={u.role} />
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <progress
-                        className="progress progress-primary w-32"
-                        value={pct}
-                        max={100}
-                      />
-                      <span className="w-20 text-sm tabular-nums">
-                        {pct}%（{u.completed}/{total}）
-                      </span>
-                    </div>
-                  </td>
-                  <td className="text-sm text-base-content/70">
-                    {formatDate(u.lastSeenAt)}
-                  </td>
-                </tr>
-              );
-            })}
-            {users.length === 0 && (
-              <tr>
-                <td colSpan={4} className="text-center text-base-content/60">
-                  まだユーザーがいません。
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="flex flex-wrap gap-3">
+        <div className="rounded-lg border border-base-300 bg-base-100 px-5 py-3">
+          <div className="text-xs text-base-content/60">受講生</div>
+          <div className="text-2xl font-bold tabular-nums">{studentCount}人</div>
+        </div>
+        <div className="rounded-lg border border-base-300 bg-base-100 px-5 py-3">
+          <div className="text-xs text-base-content/60">登録ユーザー合計</div>
+          <div className="text-2xl font-bold tabular-nums">{active.length}人</div>
+        </div>
+        <div className="rounded-lg border border-base-300 bg-base-100 px-5 py-3">
+          <div className="text-xs text-base-content/60">非アクティブ</div>
+          <div className="text-2xl font-bold tabular-nums text-error">
+            {inactiveCount}人
+          </div>
+        </div>
       </div>
+
+      <UsersTable rows={rows} total={total} />
     </section>
   );
 }

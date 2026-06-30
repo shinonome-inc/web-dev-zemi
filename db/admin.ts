@@ -1,4 +1,4 @@
-import { count, desc, eq } from "drizzle-orm";
+import { count, desc, eq, max } from "drizzle-orm";
 import { db } from "./index";
 import { progress, users } from "./schema";
 
@@ -8,10 +8,14 @@ export type UserProgressSummary = {
   mastodonAcct: string | null;
   role: (typeof users.$inferSelect)["role"];
   lastSeenAt: Date;
+  /** 最後に進捗チェックした日時（未チェックなら null） */
+  lastCheckedAt: Date | null;
+  /** 非表示（アーカイブ）日時。null=表示中 */
+  archivedAt: Date | null;
   completed: number;
 };
 
-/** 全ユーザーの基本情報と完了項目数を返す（最終ログインの新しい順）。 */
+/** 全ユーザーの基本情報・完了項目数・最終チェック日時を返す。 */
 export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> {
   return db
     .select({
@@ -20,12 +24,25 @@ export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> 
       mastodonAcct: users.mastodonAcct,
       role: users.role,
       lastSeenAt: users.lastSeenAt,
+      lastCheckedAt: max(progress.completedAt),
+      archivedAt: users.archivedAt,
       completed: count(progress.id),
     })
     .from(users)
     .leftJoin(progress, eq(progress.userId, users.id))
     .groupBy(users.id)
     .orderBy(desc(users.lastSeenAt));
+}
+
+/** ユーザーの非表示（アーカイブ）状態を切り替える。 */
+export async function setUserArchived(
+  userId: string,
+  archived: boolean,
+): Promise<void> {
+  await db
+    .update(users)
+    .set({ archivedAt: archived ? new Date() : null })
+    .where(eq(users.id, userId));
 }
 
 /** 指定ユーザーの基本情報。 */
