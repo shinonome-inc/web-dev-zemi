@@ -25,6 +25,10 @@ services:
       - key: AUTH_SECRET
         scope: RUN_TIME
         type: SECRET
+      # Mastodonアクセストークンの暗号化キー（32バイトbase64）
+      - key: TOKEN_ENC_KEY
+        scope: RUN_TIME
+        type: SECRET
       - key: AUTH_URL
         scope: RUN_TIME
         # 例: https://web-dev-zemi-portal.ondigitalocean.app（独自ドメインならそれ）

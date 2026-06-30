@@ -37,10 +37,11 @@ GUI（Apps → Create App）または `doctl apps create --spec .do/app.yaml`。
 | --- | --- | --- |
 | `DATABASE_URL` | Neon本番のPooled接続文字列 | SECRET |
 | `AUTH_SECRET` | `pnpm dlx auth secret` 等で**新規生成**（ローカルと別物） | SECRET |
+| `TOKEN_ENC_KEY` | Mastodonトークン暗号化キー（`openssl rand -base64 32`）。**ローカルとは別物を生成** | SECRET |
 | `AUTH_URL` | `https://<本番ドメイン>` | 通常 |
 | `AUTH_TRUST_HOST` | `true` | 通常 |
 | `MASTODON_INSTANCE` | `https://community.4nonome.com` | 通常 |
-| `MASTODON_CLIENT_ID` / `MASTODON_CLIENT_SECRET` | 本番OAuthアプリの値 | SECRET |
+| `MASTODON_CLIENT_ID` / `MASTODON_CLIENT_SECRET` | 本番OAuthアプリの値（スコープに `write:statuses` を含める） | SECRET |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | （任意） | SECRET |
 
 > `AUTH_URL` はデプロイ後に確定するドメイン（`*.ondigitalocean.app` か独自ドメイン）。確定後に設定し再デプロイ。
