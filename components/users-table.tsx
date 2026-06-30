@@ -33,8 +33,8 @@ function StatusIndicator({
 }) {
   if (archived) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-sm text-base-content/50">
-        <span className="h-2 w-2 rounded-full bg-current" />
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-base-content/50">
+        <span className="h-2 w-2 shrink-0 rounded-full bg-current" />
         アーカイブ済み
       </span>
     );
@@ -42,8 +42,10 @@ function StatusIndicator({
   const color = inactive ? "text-error" : "text-success";
   const label = inactive ? "非アクティブ" : "アクティブ";
   return (
-    <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${color}`}>
-      <span className="h-2 w-2 rounded-full bg-current shadow-[0_0_6px_2px_currentColor]" />
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium ${color}`}
+    >
+      <span className="h-2 w-2 shrink-0 rounded-full bg-current shadow-[0_0_6px_2px_currentColor]" />
       {label}
     </span>
   );
@@ -127,7 +129,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
             <tr>
               {header("名前", "name")}
               <th>ロール</th>
-              {header("進捗", "pct", "w-64")}
+              {header("進捗", "pct", "w-48")}
               {header("ゼミ会参加", "attend")}
               {header("最終アクティブ", "days")}
               <th>状態</th>
@@ -165,11 +167,11 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                 <td>
                   <div className="flex items-center gap-2">
                     <progress
-                      className="progress progress-primary w-32"
+                      className="progress progress-primary w-20 shrink-0"
                       value={u.pct}
                       max={100}
                     />
-                    <span className="w-20 text-sm tabular-nums">
+                    <span className="whitespace-nowrap text-sm tabular-nums">
                       {u.pct}%（{u.completed}/{total}）
                     </span>
                   </div>
