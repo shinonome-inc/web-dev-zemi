@@ -84,7 +84,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             : undefined;
         token.provider = account.provider;
         token.acct = acct;
-        token.uid = await upsertUser({
+        const dbUser = await upsertUser({
           provider: account.provider,
           providerUid: account.providerAccountId,
           displayName: user.name ?? "(no name)",
@@ -92,11 +92,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           mastodonAcct: acct,
           email: user.email,
         });
+        token.uid = dbUser.id;
+        token.role = dbUser.role;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.uid as string;
+      session.user.role = token.role as string | undefined;
       session.user.provider = token.provider as string | undefined;
       session.user.acct = token.acct as string | undefined;
       return session;

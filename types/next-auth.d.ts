@@ -5,6 +5,8 @@ declare module "next-auth" {
     user: {
       /** DB上のユーザーID（users.id） */
       id: string;
+      /** 'student' | 'staff' | 'graduate' */
+      role?: string;
       provider?: string;
       /** Mastodonのアカウント識別子（例: user@instance） */
       acct?: string;

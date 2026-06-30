@@ -10,8 +10,14 @@ type UpsertUserInput = {
   email?: string | null;
 };
 
-/** ログイン時にユーザーを作成 or 更新し、DB上のユーザーIDを返す。 */
-export async function upsertUser(input: UpsertUserInput): Promise<string> {
+/**
+ * ログイン時にユーザーを作成 or 更新し、DB上のID・ロールを返す。
+ * role は更新対象に含めない（新規は既定の 'student'、既存はDBの値を保持）。
+ * staffへの昇格はDBを直接書き換えて運用する。
+ */
+export async function upsertUser(
+  input: UpsertUserInput,
+): Promise<{ id: string; role: (typeof users.$inferSelect)["role"] }> {
   const now = new Date();
   const [row] = await db
     .insert(users)
@@ -33,7 +39,7 @@ export async function upsertUser(input: UpsertUserInput): Promise<string> {
         lastSeenAt: now,
       },
     })
-    .returning({ id: users.id });
+    .returning({ id: users.id, role: users.role });
 
-  return row.id;
+  return row;
 }

@@ -20,6 +20,11 @@ export function AuthButton() {
 
   return (
     <div className="flex items-center gap-3">
+      {session.user.role === "staff" && (
+        <Link href="/admin" className="btn btn-ghost btn-sm">
+          管理
+        </Link>
+      )}
       <span className="text-sm text-base-content/80">{session.user.name}</span>
       <button
         type="button"
