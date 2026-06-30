@@ -1,15 +1,23 @@
+import Link from "next/link";
+
 const features = [
   {
     title: "カリキュラム",
     text: "1週目から順番に学習コンテンツを閲覧できます。",
+    href: "/curriculum",
+    status: "公開中",
   },
   {
     title: "進捗管理",
     text: "各項目の完了チェックで学習の進み具合を記録します。",
+    href: null,
+    status: "実装予定",
   },
   {
     title: "コミュニティ",
     text: "わからないことは Discord のスレッドで質問しましょう。",
+    href: null,
+    status: "実装予定",
   },
 ] as const;
 
@@ -27,15 +35,35 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((f) => (
-          <article key={f.title} className="card border border-base-300 bg-base-100">
+        {features.map((f) => {
+          const body = (
             <div className="card-body gap-2">
               <h2 className="card-title text-base">{f.title}</h2>
               <p className="text-sm text-base-content/70">{f.text}</p>
-              <span className="badge badge-ghost badge-sm mt-1">実装予定</span>
+              <span
+                className={`badge badge-sm mt-1 ${
+                  f.href ? "badge-primary" : "badge-ghost"
+                }`}
+              >
+                {f.status}
+              </span>
             </div>
-          </article>
-        ))}
+          );
+          const base = "card border border-base-300 bg-base-100";
+          return f.href ? (
+            <Link
+              key={f.title}
+              href={f.href}
+              className={`${base} transition-colors hover:border-primary`}
+            >
+              {body}
+            </Link>
+          ) : (
+            <article key={f.title} className={base}>
+              {body}
+            </article>
+          );
+        })}
       </div>
     </section>
   );
