@@ -22,6 +22,32 @@ export type UserRow = {
 
 type SortKey = "name" | "pct" | "days";
 
+/** 状態表示：背景なし・光る丸マーク＋色付き文字 */
+function StatusIndicator({
+  archived,
+  inactive,
+}: {
+  archived: boolean;
+  inactive: boolean;
+}) {
+  if (archived) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-base-content/50">
+        <span className="h-2 w-2 rounded-full bg-current" />
+        アーカイブ済み
+      </span>
+    );
+  }
+  const color = inactive ? "text-error" : "text-success";
+  const label = inactive ? "非アクティブ" : "アクティブ";
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${color}`}>
+      <span className="h-2 w-2 rounded-full bg-current shadow-[0_0_6px_2px_currentColor]" />
+      {label}
+    </span>
+  );
+}
+
 export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) {
   const router = useRouter();
   const [key, setKey] = useState<SortKey>("days");
@@ -152,19 +178,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                   </div>
                 </td>
                 <td>
-                  {u.archived ? (
-                    <span className="badge badge-ghost badge-sm">
-                      アーカイブ済み
-                    </span>
-                  ) : u.inactive ? (
-                    <span className="badge badge-error badge-sm gap-1">
-                      ● 非アクティブ
-                    </span>
-                  ) : (
-                    <span className="badge badge-success badge-sm gap-1">
-                      ● アクティブ
-                    </span>
-                  )}
+                  <StatusIndicator archived={u.archived} inactive={u.inactive} />
                 </td>
                 <td>
                   {u.archived ? (
