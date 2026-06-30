@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireStaff } from "@/lib/auth-guard";
 import { getUsersProgressSummary } from "@/db/admin";
 import { getTotalItemCount } from "@/lib/curriculum";
@@ -50,12 +51,17 @@ export default async function AdminDashboardPage() {
 
   return (
     <section className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">運営ダッシュボード</h1>
-        <p className="text-sm text-base-content/70">
-          受講生の進捗状況（全{total}項目）。{INACTIVE_AFTER_DAYS}日を超えて
-          ログイン・チェックがないと「非アクティブ」になります。
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">運営ダッシュボード</h1>
+          <p className="text-sm text-base-content/70">
+            受講生の進捗状況（全{total}項目）。{INACTIVE_AFTER_DAYS}日を超えて
+            ログイン・チェックがないと「非アクティブ」になります。
+          </p>
+        </div>
+        <Link href="/admin/meetings" className="btn btn-outline btn-sm">
+          ゼミ会管理
+        </Link>
       </div>
 
       <div className="flex flex-wrap gap-3">
