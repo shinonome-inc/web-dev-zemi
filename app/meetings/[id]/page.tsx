@@ -4,6 +4,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { requireUser } from "@/lib/auth-guard";
 import { getAttendeeIds, getMeeting } from "@/db/meetings";
+import { listComments } from "@/db/comments";
+import { CommentSection } from "@/components/comment-section";
 
 export async function generateMetadata({
   params,
@@ -32,6 +34,21 @@ export default async function MeetingArchiveDetailPage({
 
   const attendeeIds = await getAttendeeIds(id);
   const attended = attendeeIds.includes(session.user.id);
+
+  const isStaff = session.user.role === "staff";
+  const comments = (await listComments(id)).map((c) => ({
+    id: c.id,
+    body: c.body,
+    authorName: c.authorName,
+    createdAtLabel: new Date(c.createdAt).toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    canModify: c.userId === session.user.id || isStaff,
+  }));
 
   return (
     <article className="space-y-6">
@@ -71,6 +88,8 @@ export default async function MeetingArchiveDetailPage({
           <Markdown remarkPlugins={[remarkGfm]}>{meeting.contentMd}</Markdown>
         </div>
       )}
+
+      <CommentSection meetingId={meeting.id} comments={comments} />
     </article>
   );
 }
