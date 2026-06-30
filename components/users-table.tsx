@@ -51,7 +51,17 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
           }}
         >
           {label}
-          {active && <span>{asc ? "▲" : "▼"}</span>}
+          <span className="inline-block w-3 text-center text-xs">
+            {active ? (
+              asc ? (
+                "▲"
+              ) : (
+                "▼"
+              )
+            ) : (
+              <span className="opacity-30">↕</span>
+            )}
+          </span>
         </button>
       </th>
     );
@@ -108,9 +118,13 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
               </td>
               <td>
                 {u.inactive ? (
-                  <span className="badge badge-error badge-sm">⚠ 非アクティブ</span>
+                  <span className="badge badge-error badge-sm gap-1">
+                    ● 非アクティブ
+                  </span>
                 ) : (
-                  <span className="badge badge-ghost badge-sm">—</span>
+                  <span className="badge badge-success badge-sm gap-1">
+                    ● アクティブ
+                  </span>
                 )}
               </td>
             </tr>
