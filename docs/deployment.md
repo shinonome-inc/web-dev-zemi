@@ -24,13 +24,21 @@ https://<本番ドメイン>/api/auth/callback/mastodon
 ローカル用 `http://localhost:3000/api/auth/callback/mastodon` は残してOK。スコープは `read:accounts`。
 （Googleを使う場合も同様に承認済みリダイレクトURIへ本番URLを追加）
 
-## 3. App Platform でアプリ作成
-GUI（Apps → Create App）または `doctl apps create --spec .do/app.yaml`。
-- ソース: GitHub `shinonome-inc/web-dev-zemi`、ブランチ `dev`、`deploy_on_push: true`
-- ビルド: **Dockerfile**（自動検出。`http_port` は 3000）
-- リージョン: `sgp` / インスタンス: `basic-xxs`
+## 3. デプロイ方式：Container Registry + GitHub Actions（組織オーナー承認不要）
+組織private repo だと App Platform の GitHub 連携は組織オーナー承認が要るため、本プロジェクトは
+**GitHub Actions でイメージをビルド → DOCR に push → App Platform が自動デプロイ**する方式を採る。
 
-> **組織repoの接続について**: App Platform は GitHub App 経由で連携します。組織private repo の場合、**組織オーナーによる DigitalOcean GitHub App のインストール承認**が必要なことがあります（Vercelで遭遇したのと同種）。承認が難しい場合は §7 のコンテナレジストリ経由を使う。
+1. **DOCR を作成**: Create → Container Registry（Starterは無料・1リポジトリ・500MiB）。
+2. **DO APIトークン作成**: API → Tokens → Generate New Token（Write権限）。
+3. **GitHubにシークレット登録**（repo管理者の権限でOK・組織オーナー不要）:
+   GitHub → repo Settings → Secrets and variables → Actions → New repository secret
+   - `DIGITALOCEAN_ACCESS_TOKEN` = 手順2のトークン
+4. **ワークフロー** `.github/workflows/deploy.yml` が `dev` への push で `web-dev-zemi:latest` を DOCR に push する。
+5. **App Platform でアプリ作成**: Create → App Platform → ソースに **DigitalOcean Container Registry** → リポジトリ `web-dev-zemi` / タグ `latest` → **Autodeploy 有効**。
+   - `http_port` 3000 / リージョン `sgp` / インスタンス `basic-xxs`。
+   - もしくは `doctl apps create --spec .do/app.yaml`（specは既にDOCRソース）。
+
+> 容量: Starterは500MiB。ワークフローに未参照マニフェストのGCを入れてあるが、足りなければ Basic レジストリ($5/月)へ。
 
 ## 4. 環境変数を設定（ダッシュボード / Settings → App-Level or Component env）
 | キー | 値 | 種別 |
@@ -56,15 +64,15 @@ DATABASE_URL='<Neon本番のPooled接続文字列>' pnpm db:migrate
 ## 6. 初期staffの設定
 本番DBにユーザーがまだいないので、まず自分がログイン（ユーザー行が作られる）→ Neon本番コンソール / `pnpm db:studio`（本番URL指定）で自分の `role` を `staff` に変更 → 再ログインで「管理」表示。
 
-## 7. （代替）組織GitHub App承認が難しい場合：コンテナレジストリ経由
-1. DigitalOcean Container Registry を作成。
-2. ローカルでイメージをビルドして push:
-   ```bash
-   doctl registry login
-   docker build -t registry.digitalocean.com/<registry>/portal:latest .
-   docker push registry.digitalocean.com/<registry>/portal:latest
-   ```
-3. App Platform でソースを **DOCR イメージ** にして作成（GitHub App 不要）。env は §4 と同じ。
+## 7. （手動デプロイしたい場合）ローカルからpush
+Actions を使わず手元から出すこともできる（Docker + doctl 必要）:
+```bash
+doctl registry login
+ENDPOINT=$(doctl registry get --format Endpoint --no-header)
+docker build -t "$ENDPOINT/web-dev-zemi:latest" .
+docker push "$ENDPOINT/web-dev-zemi:latest"
+```
+Autodeploy 有効なら push で本番反映。
 
 ## 8. （任意）独自ドメイン
 - Namecheap（GitHub Student Pack で `.me` 無料1年）等でドメイン取得。

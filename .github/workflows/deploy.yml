@@ -1,0 +1,33 @@
+name: Build and push to DOCR
+
+# dev への push で Dockerイメージをビルドし、DigitalOcean Container Registry に push する。
+# App Platform 側を「DOCRのイメージ更新で自動デプロイ」に設定しておくと、push→自動本番反映になる。
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DOCR
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build and push image
+        run: |
+          ENDPOINT=$(doctl registry get --format Endpoint --no-header)
+          IMAGE="$ENDPOINT/web-dev-zemi"
+          docker build -t "$IMAGE:latest" .
+          docker push "$IMAGE:latest"
+
+      # Starterレジストリは容量500MiBのため、未参照のレイヤを掃除して肥大化を防ぐ
+      - name: Garbage collect untagged manifests
+        run: doctl registry garbage-collection start --force --include-untagged-manifests || true

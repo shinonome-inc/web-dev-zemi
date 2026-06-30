@@ -2,18 +2,22 @@
 # 初回は GUI から作成してもよい。doctl を使う場合:
 #   doctl apps create --spec .do/app.yaml
 # SECRET 型の値はこのファイルには書かず、ダッシュボードで設定する。
+#
+# イメージは GitHub Actions (.github/workflows/deploy.yml) が DOCR に push する。
+# deploy_on_push を有効にしているので、新しいイメージがpushされると自動デプロイされる。
 name: web-dev-zemi-portal
 region: sgp
 services:
   - name: web
-    dockerfile_path: Dockerfile
+    image:
+      registry_type: DOCR
+      repository: web-dev-zemi
+      tag: latest
+      deploy_on_push:
+        enabled: true
     http_port: 3000
     instance_size_slug: basic-xxs
     instance_count: 1
-    github:
-      repo: shinonome-inc/web-dev-zemi
-      branch: dev
-      deploy_on_push: true
     health_check:
       http_path: /
     envs:
