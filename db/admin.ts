@@ -1,6 +1,6 @@
-import { count, desc, eq, max } from "drizzle-orm";
+import { count, countDistinct, desc, eq, max } from "drizzle-orm";
 import { db } from "./index";
-import { progress, users } from "./schema";
+import { meetingAttendance, progress, users } from "./schema";
 
 export type UserProgressSummary = {
   id: string;
@@ -13,10 +13,14 @@ export type UserProgressSummary = {
   /** 非表示（アーカイブ）日時。null=表示中 */
   archivedAt: Date | null;
   completed: number;
+  /** ゼミ会の参加回数 */
+  attendanceCount: number;
 };
 
-/** 全ユーザーの基本情報・完了項目数・最終チェック日時を返す。 */
+/** 全ユーザーの基本情報・完了項目数・最終チェック日時・ゼミ会参加回数を返す。 */
 export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> {
+  // progress と meeting_attendance を同時に結合すると件数が掛け算になるため
+  // countDistinct で重複を除いて数える。
   return db
     .select({
       id: users.id,
@@ -26,10 +30,12 @@ export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> 
       lastSeenAt: users.lastSeenAt,
       lastCheckedAt: max(progress.completedAt),
       archivedAt: users.archivedAt,
-      completed: count(progress.id),
+      completed: countDistinct(progress.id),
+      attendanceCount: countDistinct(meetingAttendance.id),
     })
     .from(users)
     .leftJoin(progress, eq(progress.userId, users.id))
+    .leftJoin(meetingAttendance, eq(meetingAttendance.userId, users.id))
     .groupBy(users.id)
     .orderBy(desc(users.lastSeenAt));
 }

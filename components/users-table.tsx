@@ -18,9 +18,10 @@ export type UserRow = {
   daysInactive: number;
   inactive: boolean;
   archived: boolean;
+  attendanceCount: number;
 };
 
-type SortKey = "name" | "pct" | "days";
+type SortKey = "name" | "pct" | "days" | "attend";
 
 /** 状態表示：背景なし・光る丸マーク＋色付き文字 */
 function StatusIndicator({
@@ -69,6 +70,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
       let d = 0;
       if (key === "name") d = a.displayName.localeCompare(b.displayName, "ja");
       else if (key === "pct") d = a.pct - b.pct;
+      else if (key === "attend") d = a.attendanceCount - b.attendanceCount;
       else d = a.daysInactive - b.daysInactive;
       return asc ? d : -d;
     });
@@ -126,6 +128,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
               {header("名前", "name")}
               <th>ロール</th>
               {header("進捗", "pct", "w-64")}
+              {header("ゼミ会参加", "attend")}
               {header("最終アクティブ", "days")}
               <th>状態</th>
               <th>操作</th>
@@ -171,6 +174,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                     </span>
                   </div>
                 </td>
+                <td className="text-sm tabular-nums">{u.attendanceCount}回</td>
                 <td className="text-sm text-base-content/70">
                   {u.lastActiveLabel}
                   <div className="text-xs text-base-content/50">
@@ -205,7 +209,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
             ))}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center text-base-content/60">
+                <td colSpan={7} className="text-center text-base-content/60">
                   表示するユーザーがいません。
                 </td>
               </tr>
