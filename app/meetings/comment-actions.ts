@@ -2,12 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
-import {
-  addComment,
-  deleteComment,
-  getComment,
-  updateComment,
-} from "@/db/comments";
+import { addComment, deleteComment, getComment } from "@/db/comments";
 import { getMeeting } from "@/db/meetings";
 import { getUserMastodonToken } from "@/db/users";
 import { postStatus } from "@/lib/mastodon";
@@ -65,19 +60,6 @@ async function authorizeOwnerOrStaff(commentId: string) {
   const isStaff = session.user.role === "staff";
   if (!isOwner && !isStaff) return { error: "権限がありません" as const };
   return { comment };
-}
-
-export async function editComment(
-  commentId: string,
-  body: string,
-): Promise<Result> {
-  const text = body.trim();
-  if (!text) return { ok: false, error: "コメントを入力してください" };
-  const auth = await authorizeOwnerOrStaff(commentId);
-  if ("error" in auth) return { ok: false, error: auth.error };
-  await updateComment(commentId, text);
-  revalidatePath(`/meetings/${auth.comment.meetingId}`);
-  return { ok: true };
 }
 
 export async function removeComment(commentId: string): Promise<Result> {

@@ -44,13 +44,6 @@ export async function addComment(
   await db.insert(meetingComments).values({ meetingId, userId, body });
 }
 
-export async function updateComment(id: string, body: string): Promise<void> {
-  await db
-    .update(meetingComments)
-    .set({ body, updatedAt: new Date() })
-    .where(eq(meetingComments.id, id));
-}
-
 export async function deleteComment(id: string): Promise<void> {
   await db.delete(meetingComments).where(eq(meetingComments.id, id));
 }
