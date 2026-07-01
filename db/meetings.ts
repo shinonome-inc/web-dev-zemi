@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
 import { meetingAttendance, meetings, users } from "./schema";
 
@@ -53,6 +53,7 @@ export async function listAttendableUsers() {
   return db
     .select({ id: users.id, displayName: users.displayName, role: users.role })
     .from(users)
+    .where(isNull(users.archivedAt))
     .orderBy(users.displayName);
 }
 
