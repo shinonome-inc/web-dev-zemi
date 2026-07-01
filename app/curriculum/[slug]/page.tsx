@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireUser } from "@/lib/auth-guard";
 import { getCurriculumList, getCurriculumParts } from "@/lib/curriculum";
 import { ProgressChecklist } from "@/components/progress-checklist";
 import { MarkdownContent } from "@/components/markdown-content";
-
-export function generateStaticParams() {
-  return getCurriculumList().map((item) => ({ slug: item.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -27,6 +24,7 @@ export default async function CurriculumDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await requireUser();
   const { slug } = await params;
   const parts = getCurriculumParts(slug);
   if (!parts) notFound();

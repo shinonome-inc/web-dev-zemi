@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { requireUser } from "@/lib/auth-guard";
 import { getCurriculumList } from "@/lib/curriculum";
 
 export const metadata = {
   title: "カリキュラム | はじめてのWEB開発ゼミ ポータル",
 };
 
-export default function CurriculumIndexPage() {
+export default async function CurriculumIndexPage() {
+  await requireUser();
   const items = getCurriculumList();
 
   return (

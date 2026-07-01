@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
 import { findUserByProvider, upsertUser } from "@/db/users";
 
@@ -44,7 +43,11 @@ function Mastodon(
   };
 }
 
-/** env に設定があるプロバイダのみ有効化する（Mastodon必須・Google任意） */
+/**
+ * ログインプロバイダを構築する。コミュニティの Mastodon（PGrit）のみを許可する。
+ * PGritアカウントの保有＝メンバーであることを認証ゲートとして機能させ、
+ * 部外者のオープンサインアップを防ぐ（Google等の外部IdPは意図的に非対応）。
+ */
 function buildProviders() {
   const providers = [];
 
@@ -56,16 +59,6 @@ function buildProviders() {
         instance: MASTODON_INSTANCE,
         clientId: MASTODON_CLIENT_ID,
         clientSecret: MASTODON_CLIENT_SECRET,
-      }),
-    );
-  }
-
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
-  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
-    providers.push(
-      Google({
-        clientId: GOOGLE_CLIENT_ID,
-        clientSecret: GOOGLE_CLIENT_SECRET,
       }),
     );
   }
