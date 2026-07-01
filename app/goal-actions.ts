@@ -20,7 +20,7 @@ export async function postGoal(
     return { ok: false, error: "Mastodonでの再ログインが必要です" };
   }
 
-  const footer = "\n\n#PGrit";
+  const footer = "\n\n#WEB開発ゼミ #本日の目標";
   const max = MASTODON_MAX_CHARS - footer.length;
   const status =
     (body.length > max ? `${body.slice(0, max - 1)}…` : body) + footer;
