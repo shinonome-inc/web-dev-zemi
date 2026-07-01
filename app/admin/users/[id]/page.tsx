@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth-guard";
-import { getAllCompletedItemIds, getUserById } from "@/db/admin";
+import { getUserById } from "@/db/admin";
+import { getAllCompletedItemIds } from "@/db/progress";
 import { getCurriculumManifest, getTotalItemCount } from "@/lib/curriculum";
 
 export default async function UserProgressDetailPage({

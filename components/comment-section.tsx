@@ -105,7 +105,7 @@ export function CommentSection({
                 checked={alsoToot}
                 onChange={(e) => setAlsoToot(e.target.checked)}
               />
-              Mastodonにも投稿する
+              PGritにも投稿する
             </label>
           ) : (
             <span />
