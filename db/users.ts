@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./index";
 import { users } from "./schema";
 import { decryptToken, encryptToken } from "@/lib/crypto";
@@ -79,4 +79,27 @@ export async function getUserMastodonToken(
     .from(users)
     .where(eq(users.id, userId));
   return row?.token ? decryptToken(row.token) : null;
+}
+
+/** DB上のロールを取得（権限判定はJWTでなくDBを正とするため）。不在なら null。 */
+export async function getUserRole(
+  userId: string,
+): Promise<(typeof users.$inferSelect)["role"] | null> {
+  const [row] = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, userId));
+  return row?.role ?? null;
+}
+
+/** provider + providerUid で既存ユーザーを引く。ログイン可否判定（除名チェック）に使う。 */
+export async function findUserByProvider(
+  provider: string,
+  providerUid: string,
+): Promise<{ id: string; archivedAt: Date | null } | null> {
+  const [row] = await db
+    .select({ id: users.id, archivedAt: users.archivedAt })
+    .from(users)
+    .where(and(eq(users.provider, provider), eq(users.providerUid, providerUid)));
+  return row ?? null;
 }

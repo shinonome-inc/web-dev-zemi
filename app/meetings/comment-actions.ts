@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
 import { addComment, deleteComment, getComment } from "@/db/comments";
 import { getMeeting } from "@/db/meetings";
-import { getUserMastodonToken } from "@/db/users";
+import { getUserMastodonToken, getUserRole } from "@/db/users";
 import { buildStatusWithFooter, postStatus } from "@/lib/mastodon";
 
 type Result = { ok: boolean; error?: string; tootWarning?: string };
@@ -54,13 +54,14 @@ export async function postComment(
   return { ok: true, tootWarning };
 }
 
-/** 投稿者本人 or staff のみ許可。 */
+/** 投稿者本人 or staff のみ許可。staff判定はJWTでなくDBを正とする（降格を即時反映）。 */
 async function authorizeOwnerOrStaff(commentId: string) {
   const session = await requireUser();
   const comment = await getComment(commentId);
   if (!comment) return { error: "コメントが見つかりません" as const };
   const isOwner = comment.userId === session.user.id;
-  const isStaff = session.user.role === "staff";
+  const isStaff =
+    !isOwner && (await getUserRole(session.user.id)) === "staff";
   if (!isOwner && !isStaff) return { error: "権限がありません" as const };
   return { comment };
 }

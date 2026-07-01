@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import type { OAuthConfig, OAuthUserConfig } from "next-auth/providers";
-import { upsertUser } from "@/db/users";
+import { findUserByProvider, upsertUser } from "@/db/users";
 
 /** Mastodon の verify_credentials が返すプロフィール（必要分のみ） */
 interface MastodonProfile {
@@ -77,6 +77,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: buildProviders(),
   session: { strategy: "jwt" },
   callbacks: {
+    // 除名（アーカイブ）済みユーザーの再ログインを拒否する。
+    async signIn({ account }) {
+      if (!account) return false;
+      const existing = await findUserByProvider(
+        account.provider,
+        account.providerAccountId,
+      );
+      if (existing?.archivedAt) return false;
+      return true;
+    },
     // サインイン時にユーザーをDBへupsertし、DBのユーザーID・provider・acctをtokenに持たせる
     async jwt({ token, user, account, profile }) {
       if (account && user) {

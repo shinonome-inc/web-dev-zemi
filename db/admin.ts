@@ -47,7 +47,11 @@ export async function setUserArchived(
 ): Promise<void> {
   await db
     .update(users)
-    .set({ archivedAt: archived ? new Date() : null })
+    .set({
+      archivedAt: archived ? new Date() : null,
+      // 除名時はMastodonトークンを破棄し、なりすまし投稿の余地を残さない
+      ...(archived ? { mastodonAccessToken: null } : {}),
+    })
     .where(eq(users.id, userId));
 }
 
