@@ -16,6 +16,7 @@
 
 | 週       | テーマ                                        | リンク                                                                                         |
 | -------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 準備編   | 環境構築とGit操作                             | [curriculum/00-prep.md](curriculum/00-prep.md)                                                 |
 | 1週目    | AI駆動開発の基本操作                          | [curriculum/01-ai-driven-dev-basics.md](curriculum/01-ai-driven-dev-basics.md)                 |
 | 2週目    | 要件定義とドキュメント駆動                    | [curriculum/02-requirements-and-docs-driven.md](curriculum/02-requirements-and-docs-driven.md) |
 | 3週目    | 外部知識の活用                                | [curriculum/03-using-external-knowledge.md](curriculum/03-using-external-knowledge.md)         |
