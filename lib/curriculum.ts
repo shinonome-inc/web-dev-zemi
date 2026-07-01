@@ -3,8 +3,9 @@ import path from "node:path";
 
 const CURRICULUM_DIR = path.join(process.cwd(), "curriculum");
 
-/** 学習順（READMEのカリキュラム順に一致。中間課題は5週目と6週目の間） */
+/** 学習順（READMEのカリキュラム順に一致。準備編は1週目より前、中間課題は5週目と6週目の間） */
 const ORDER: { slug: string; label: string }[] = [
+  { slug: "00-prep", label: "準備編" },
   { slug: "01-ai-driven-dev-basics", label: "1週目" },
   { slug: "02-requirements-and-docs-driven", label: "2週目" },
   { slug: "03-using-external-knowledge", label: "3週目" },

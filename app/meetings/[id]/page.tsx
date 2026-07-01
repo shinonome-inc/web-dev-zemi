@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { requireUser } from "@/lib/auth-guard";
 import { getAttendeeIds, getMeeting } from "@/db/meetings";
 import { listComments } from "@/db/comments";
 import { CommentSection } from "@/components/comment-section";
+import { MarkdownContent } from "@/components/markdown-content";
 
 export async function generateMetadata({
   params,
@@ -85,7 +84,7 @@ export default async function MeetingArchiveDetailPage({
 
       {meeting.contentMd.trim() && (
         <div className="prose max-w-none prose-a:text-primary">
-          <Markdown remarkPlugins={[remarkGfm]}>{meeting.contentMd}</Markdown>
+          <MarkdownContent>{meeting.contentMd}</MarkdownContent>
         </div>
       )}
 

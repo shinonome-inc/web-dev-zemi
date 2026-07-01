@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { getCurriculumList, getCurriculumParts } from "@/lib/curriculum";
 import { ProgressChecklist } from "@/components/progress-checklist";
+import { MarkdownContent } from "@/components/markdown-content";
 
 export function generateStaticParams() {
   return getCurriculumList().map((item) => ({ slug: item.slug }));
@@ -45,11 +44,9 @@ export default async function CurriculumDetailPage({
       </div>
 
       <div className="prose max-w-none prose-headings:scroll-mt-20 prose-a:text-primary">
-        <Markdown remarkPlugins={[remarkGfm]}>{parts.before}</Markdown>
+        <MarkdownContent>{parts.before}</MarkdownContent>
         <ProgressChecklist items={parts.items} weekSlug={parts.slug} />
-        {parts.after && (
-          <Markdown remarkPlugins={[remarkGfm]}>{parts.after}</Markdown>
-        )}
+        {parts.after && <MarkdownContent>{parts.after}</MarkdownContent>}
       </div>
 
       <nav className="flex justify-between gap-4 border-t border-base-300 pt-6">
