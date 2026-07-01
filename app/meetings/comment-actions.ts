@@ -30,7 +30,7 @@ async function tryToot(
   const instance = process.env.MASTODON_INSTANCE;
   const token = await getUserMastodonToken(userId);
   if (!instance || !token) {
-    return "Mastodon連携の再ログインが必要です（投稿はスキップしました）";
+    return "PGrit連携の再ログインが必要です（投稿はスキップしました）";
   }
   const meeting = await getMeeting(meetingId);
   // Mastodonのハッシュタグは数字のみだと無効なため先頭に d を付ける（例: #d20260701）。
@@ -43,7 +43,7 @@ async function tryToot(
     return undefined;
   } catch (e) {
     console.error("[meetings] Mastodon投稿に失敗", e);
-    return "Mastodonへの投稿に失敗しました（再ログインが必要かもしれません）";
+    return "PGritへの投稿に失敗しました（再ログインが必要かもしれません）";
   }
 }
 

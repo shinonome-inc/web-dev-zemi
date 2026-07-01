@@ -20,7 +20,8 @@ function Mastodon(
   const instance = options.instance.replace(/\/$/, "");
   return {
     id: "mastodon",
-    name: "Mastodon",
+    // "mastodon" はOAuthプロトコル/内部ID。表示名はコミュニティでの呼称「PGrit」に合わせる。
+    name: "PGrit",
     type: "oauth",
     authorization: {
       url: `${instance}/oauth/authorize`,

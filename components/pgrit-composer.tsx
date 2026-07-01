@@ -50,7 +50,7 @@ export function PgritComposer({ canPost }: { canPost: boolean }) {
           </>
         ) : (
           <p className="text-sm text-base-content/70">
-            Mastodonでログインすると投稿できます。
+            PGritでログインすると投稿できます。
           </p>
         )}
       </div>

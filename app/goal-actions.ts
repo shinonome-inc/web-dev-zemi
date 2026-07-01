@@ -17,7 +17,7 @@ export async function postGoal(
   const instance = process.env.MASTODON_INSTANCE;
   const token = await getUserMastodonToken(session.user.id);
   if (!instance || !token) {
-    return { ok: false, error: "Mastodonでの再ログインが必要です" };
+    return { ok: false, error: "PGritでの再ログインが必要です" };
   }
 
   const footer = "\n\n#WEB開発ゼミ #本日の目標";
