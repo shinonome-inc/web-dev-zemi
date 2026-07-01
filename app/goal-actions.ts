@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth-guard";
 import { getUserMastodonToken } from "@/db/users";
 import { buildStatusWithFooter, postStatus } from "@/lib/mastodon";
+import { LIMITS } from "@/lib/validation";
 
 /** 今日の目標を本人名義でPGrit（Mastodon）に投稿する。 */
 export async function postGoal(
@@ -11,6 +12,12 @@ export async function postGoal(
   const session = await requireUser();
   const body = text.trim();
   if (!body) return { ok: false, error: "目標を入力してください" };
+  if (body.length > LIMITS.goalBody) {
+    return {
+      ok: false,
+      error: `目標は${LIMITS.goalBody}文字以内で入力してください`,
+    };
+  }
 
   const instance = process.env.MASTODON_INSTANCE;
   const token = await getUserMastodonToken(session.user.id);

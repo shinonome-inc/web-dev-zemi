@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth-guard";
 import { getUserById } from "@/db/admin";
 import { getAllCompletedItemIds } from "@/db/progress";
 import { getCurriculumManifest, getTotalItemCount } from "@/lib/curriculum";
+import { isUuid } from "@/lib/validation";
 
 export default async function UserProgressDetailPage({
   params,
@@ -12,6 +13,7 @@ export default async function UserProgressDetailPage({
 }) {
   await requireStaff();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
 
   const user = await getUserById(id);
   if (!user) notFound();

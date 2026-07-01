@@ -9,6 +9,7 @@ import {
 import { MeetingForm } from "@/components/meeting-form";
 import { AttendanceEditor } from "@/components/attendance-editor";
 import { DeleteMeetingButton } from "@/components/delete-meeting-button";
+import { isUuid } from "@/lib/validation";
 
 export default async function EditMeetingPage({
   params,
@@ -17,6 +18,7 @@ export default async function EditMeetingPage({
 }) {
   await requireStaff();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
 
   const meeting = await getMeeting(id);
   if (!meeting) notFound();

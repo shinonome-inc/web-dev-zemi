@@ -2,10 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth-guard";
-import { addComment, deleteComment, getComment } from "@/db/comments";
+import {
+  addComment,
+  countRecentComments,
+  deleteComment,
+  getComment,
+} from "@/db/comments";
 import { getMeeting } from "@/db/meetings";
 import { getUserMastodonToken, getUserRole } from "@/db/users";
 import { buildStatusWithFooter, postStatus } from "@/lib/mastodon";
+import { LIMITS } from "@/lib/validation";
+
+/** 連投とみなす間隔（秒）。この間隔内の新規コメントは拒否する。 */
+const COMMENT_THROTTLE_SECONDS = 3;
 
 type Result = { ok: boolean; error?: string; tootWarning?: string };
 
@@ -44,6 +53,19 @@ export async function postComment(
   const session = await requireUser();
   const text = body.trim();
   if (!text) return { ok: false, error: "コメントを入力してください" };
+  if (text.length > LIMITS.commentBody) {
+    return {
+      ok: false,
+      error: `コメントは${LIMITS.commentBody}文字以内で入力してください`,
+    };
+  }
+
+  // 連投（スパム・DB肥大化）を抑止する簡易レート制限
+  const since = new Date(Date.now() - COMMENT_THROTTLE_SECONDS * 1000);
+  if ((await countRecentComments(session.user.id, since)) > 0) {
+    return { ok: false, error: "投稿の間隔が短すぎます。少し待って再度お試しください" };
+  }
+
   await addComment(meetingId, session.user.id, text);
   revalidatePath(`/meetings/${meetingId}`);
 

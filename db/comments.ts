@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, gte } from "drizzle-orm";
 import { db } from "./index";
 import { meetingComments, users } from "./schema";
 
@@ -46,4 +46,21 @@ export async function addComment(
 
 export async function deleteComment(id: string): Promise<void> {
   await db.delete(meetingComments).where(eq(meetingComments.id, id));
+}
+
+/** 指定ユーザーが `since` 以降に投稿したコメント数（連投レート制限用）。 */
+export async function countRecentComments(
+  userId: string,
+  since: Date,
+): Promise<number> {
+  const [row] = await db
+    .select({ c: count() })
+    .from(meetingComments)
+    .where(
+      and(
+        eq(meetingComments.userId, userId),
+        gte(meetingComments.createdAt, since),
+      ),
+    );
+  return row?.c ?? 0;
 }

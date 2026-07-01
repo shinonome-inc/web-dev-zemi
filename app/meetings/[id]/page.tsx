@@ -5,6 +5,7 @@ import { getAttendeeIds, getMeeting } from "@/db/meetings";
 import { listComments } from "@/db/comments";
 import { CommentSection } from "@/components/comment-section";
 import { MarkdownContent } from "@/components/markdown-content";
+import { isUuid } from "@/lib/validation";
 
 export async function generateMetadata({
   params,
@@ -12,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const meeting = await getMeeting(id);
+  const meeting = isUuid(id) ? await getMeeting(id) : null;
   return {
     title: meeting
       ? `${meeting.title} | ゼミ会アーカイブ`
@@ -27,6 +28,7 @@ export default async function MeetingArchiveDetailPage({
 }) {
   const session = await requireUser();
   const { id } = await params;
+  if (!isUuid(id)) notFound();
 
   const meeting = await getMeeting(id);
   if (!meeting) notFound();

@@ -112,3 +112,14 @@ export function getCurriculumManifest(): CurriculumWeekItems[] {
 export function getTotalItemCount(): number {
   return getCurriculumManifest().reduce((sum, w) => sum + w.items.length, 0);
 }
+
+/**
+ * itemId が weekSlug 内に実在する進捗項目かを検証する。
+ * item.id は `<slug>:c<連番>` 形式のため、weekSlug との整合もこれで担保される。
+ * 存在しないIDの挿入による進捗率偽装・不要行の増殖を防ぐ。
+ */
+export function isValidProgressItem(itemId: string, weekSlug: string): boolean {
+  const parts = getCurriculumParts(weekSlug);
+  if (!parts) return false;
+  return parts.items.some((item) => item.id === itemId);
+}
