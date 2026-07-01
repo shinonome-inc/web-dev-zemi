@@ -10,7 +10,7 @@ import {
   updateMeeting,
   type MeetingInput,
 } from "@/db/meetings";
-import { isSafeHttpUrl, LIMITS } from "@/lib/validation";
+import { isSafeHttpUrl, isUuid, LIMITS } from "@/lib/validation";
 
 /** 開催日が YYYY-MM-DD 形式かつ実在日付かを検証する。 */
 function isValidDate(value: string): boolean {
@@ -46,6 +46,9 @@ export async function saveMeeting(
   form: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
   await requireStaff();
+  if (id !== null && !isUuid(id)) {
+    return { ok: false, error: "ゼミ会が見つかりません" };
+  }
   const input = parse(form);
   if ("error" in input) return { ok: false, error: input.error };
 
@@ -58,8 +61,10 @@ export async function saveMeeting(
 
 export async function removeMeeting(id: string): Promise<void> {
   await requireStaff();
-  await deleteMeeting(id);
-  revalidatePath("/admin/meetings");
+  if (isUuid(id)) {
+    await deleteMeeting(id);
+    revalidatePath("/admin/meetings");
+  }
   redirect("/admin/meetings");
 }
 
@@ -69,6 +74,7 @@ export async function toggleAttendance(
   attended: boolean,
 ): Promise<{ ok: boolean }> {
   await requireStaff();
+  if (!isUuid(meetingId) || !isUuid(userId)) return { ok: false };
   await setAttendance(meetingId, userId, attended);
   return { ok: true };
 }

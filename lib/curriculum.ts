@@ -27,6 +27,9 @@ export type CurriculumMeta = {
 };
 
 function readRaw(slug: string): string | null {
+  // slug はURLやServer Action経由の信頼できない入力になり得るため、
+  // 許可リスト（ORDER）と照合してからファイルパスに使う（traversal防止）
+  if (!ORDER.some((entry) => entry.slug === slug)) return null;
   const file = path.join(CURRICULUM_DIR, `${slug}.md`);
   if (!fs.existsSync(file)) return null;
   return fs.readFileSync(file, "utf8");

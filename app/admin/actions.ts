@@ -9,6 +9,7 @@ import {
   updateUserRole,
 } from "@/db/admin";
 import { ROLES, type Role } from "@/lib/roles";
+import { isUuid } from "@/lib/validation";
 
 /** staffがユーザーのロールを変更する。最後のstaffの降格は拒否する。 */
 export async function changeUserRole(
@@ -21,6 +22,7 @@ export async function changeUserRole(
     return { ok: false, error: "不正なロールです" };
   }
 
+  if (!isUuid(userId)) return { ok: false, error: "ユーザーが見つかりません" };
   const target = await getUserById(userId);
   if (!target) return { ok: false, error: "ユーザーが見つかりません" };
 
@@ -41,6 +43,7 @@ export async function archiveUser(
 ): Promise<{ ok: boolean; error?: string }> {
   await requireStaff();
 
+  if (!isUuid(userId)) return { ok: false, error: "ユーザーが見つかりません" };
   const target = await getUserById(userId);
   if (!target) return { ok: false, error: "ユーザーが見つかりません" };
 

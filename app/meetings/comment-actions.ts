@@ -11,7 +11,7 @@ import {
 import { getMeeting } from "@/db/meetings";
 import { getUserMastodonToken, getUserRole } from "@/db/users";
 import { buildStatusWithFooter, postStatus } from "@/lib/mastodon";
-import { LIMITS } from "@/lib/validation";
+import { isUuid, LIMITS } from "@/lib/validation";
 
 /** 連投とみなす間隔（秒）。この間隔内の新規コメントは拒否する。 */
 const COMMENT_THROTTLE_SECONDS = 3;
@@ -51,6 +51,10 @@ export async function postComment(
   alsoToot = false,
 ): Promise<Result> {
   const session = await requireUser();
+  // 不正なIDはDB層で例外になる前に弾く（uuid形式・実在の両方を確認）
+  if (!isUuid(meetingId) || !(await getMeeting(meetingId))) {
+    return { ok: false, error: "ゼミ会が見つかりません" };
+  }
   const text = body.trim();
   if (!text) return { ok: false, error: "コメントを入力してください" };
   if (text.length > LIMITS.commentBody) {
@@ -79,6 +83,7 @@ export async function postComment(
 /** 投稿者本人 or staff のみ許可。staff判定はJWTでなくDBを正とする（降格を即時反映）。 */
 async function authorizeOwnerOrStaff(commentId: string) {
   const session = await requireUser();
+  if (!isUuid(commentId)) return { error: "コメントが見つかりません" as const };
   const comment = await getComment(commentId);
   if (!comment) return { error: "コメントが見つかりません" as const };
   const isOwner = comment.userId === session.user.id;
