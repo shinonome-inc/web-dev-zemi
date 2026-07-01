@@ -24,23 +24,24 @@
       │
       ▼
 ┌──────────────────────────────┐
-│  Next.js (App Router)  on DigitalOcean App Platform   │
+│  Next.js (App Router)  on Vercel (Hobby/無料)        │
 │  ├ カリキュラム表示（curriculum/ のMarkdownを描画）  │
 │  ├ 進捗チェックUI（要ログイン）                       │
 │  ├ 運営ダッシュボード（/admin・staffのみ）           │
-│  └ Auth.js（Mastodon OAuth 主／Google 従）           │
+│  └ Auth.js（PGrit=Mastodon OAuth 主／Google 従）     │
 └──────────────────────────────┘
       │ SQL
       ▼
 ┌──────────────────────────────┐
-│  Postgres（DigitalOcean Managed / Dev Database）     │
-│  users / progress （+ 後続で activity_log）          │
+│  Postgres（Neon 無料枠）                             │
+│  users / progress / meetings / meeting_attendance /  │
+│  meeting_comments                                    │
 └──────────────────────────────┘
       │ OAuth
       ▼
-[ コミュニティMastodonインスタンス ] / [ Google ]
+[ コミュニティMastodon(PGrit)インスタンス ] / [ Google ]
 
-[ Discord ] ← 各課題ページからリンク（初期は一方向）
+[ Discord ] ← 各課題ページからリンク（未実装・今後の課題）
 ```
 
 ### 設計の基本思想
@@ -55,29 +56,16 @@
 | レイヤ | 推奨 | 理由 / 代替 |
 | ------ | ---- | ---------- |
 | フレームワーク | **Next.js（App Router, TypeScript）** | カリキュラム5週目・中間課題で扱う技術と一致。SSRでMarkdownもAPIも1つで完結。代替: Remix |
-| ホスティング | **DigitalOcean App Platform**（Student Pack $200クレジット） | 組織所有private repoでもデプロイ可（Vercel Hobbyは組織private＝Pro必須で不可）。GitHub push自動デプロイ。AI/GPU等の拡張も同一基盤で可能 |
-| 認証 | **Auth.js (NextAuth v5)** | Mastodon(OAuth2)のカスタムプロバイダ＋Google を共存可能。セッション管理込み |
-| DB | **Postgres（DigitalOcean Managed / Dev Database）** | App Platformに統合。Dev Database($7/月)で30人は十分。6週目DB連携の学びとも接続 |
+| ホスティング | **Vercel（Hobby・無料）** | リポジトリを**public化**したことでHobbyがそのまま使える。GitHub push（`dev`ブランチ）で自動デプロイ |
+| 認証 | **Auth.js (NextAuth v5)** | PGrit(Mastodon, OAuth2)のカスタムプロバイダ＋Google を共存可能。セッション管理込み |
+| DB | **Postgres（Neon 無料枠）** | サーバーレス・ゼロスケールで無料。開発/本番を**単一DBで共用**（30人規模の運用負荷軽減を優先） |
 | ORM | **Drizzle ORM** | 軽量・型安全。代替: Prisma（DXが手厚く初学者向け） |
-| Markdown描画 | **next-mdx-remote または remark/rehype** | GFMのタスクリスト（`- [ ]`）抽出にremark系が必須 |
-| エラー監視（任意） | **Sentry**（Student Packに含む） | 運用フェーズの安定化に |
-| ドメイン（任意） | **Namecheap .me 無料1年**（Student Pack） | 独自ドメインが欲しければ |
+| Markdown描画 | **react-markdown + remark-gfm** | GFMのタスクリスト（`- [ ]`）抽出・描画に使用 |
+| トークン暗号化 | **AES-256-GCM（Node crypto）** | PGritのアクセストークンをDB保存時に暗号化。鍵(`TOKEN_ENC_KEY`)はDBと別管理 |
 
-> **デプロイ先の決定経緯**: 当初Vercel Hobby（無料）を想定したが、**Vercelは「組織所有のprivate repo」のGit連携デプロイにPro必須**で無料では不可。組織オーナー権限なし・private維持の制約から、Student Packの **DigitalOcean $200クレジット** を使う方針に決定。
-
-### 2.1 コスト試算と安全策（DigitalOcean）
-
-| 構成 | 月額目安 | 6ヶ月合計 |
-| ---- | ------- | -------- |
-| **推奨: App Platform Basic（$5）＋ Dev DB Postgres（$7）** | **〜$12** | **〜$72** |
-| 最安: Droplet 1台（$6〜12）にNext.js＋Postgres同居（自己管理） | $6〜12 | $36〜72 |
-| 余裕: Pro service（$12）＋ Managed DB（$15） | 〜$27 | 〜$162 |
-
-- $200クレジットは6ヶ月なら**十分に余る**（30人規模で月$200を使うには大型/GPUリソースが必要）。
-- **クレジットを溶かす唯一の地雷＝GPU Droplet / GPUインスタンス**（時間課金で高額）。AI実験時のみ注意し、使い終えたら必ず破棄。
-- DigitalOceanはDroplet/DBが**存在する限り時間課金**（アイドルでも課金。Vercel/Neonのゼロスケールとは異なる）。
-- **必須**: Settings → Billing で **Billing Alert（例: $20/$50）** を設定。クレジット切れ後はカード課金になるため。期限切れ・不要リソース（LB/スナップショット）の消し忘れに注意。
-- Student PackのDigitalOcean $200は**有効期限つき（通常1年・新規アカウント向け）**。学生サイクルとも整合。
+> **デプロイ先の決定経緯**: 当初Vercel Hobby（無料）を想定したが、組織所有のprivate repoはVercel HobbyだとPro必須で不可と判明。次にDigitalOcean App Platform（GitHub Student Packの$200クレジット）に切り替えたが、クレジットの有効期限が想定より短く実質1ヶ月ほどしか残っていなかったため断念。最終的に**リポジトリをpublic化**し、Vercel Hobby（$0）に確定。DBはNeon無料枠のまま変更なし。学習コミュニティのポータルという性質上、コード公開自体はデメリットにならない。
+>
+> DigitalOcean向けに用意した `Dockerfile` / `.do/app.yaml` / GitHub Actions等は不要になったため削除済み。当時のコスト試算・GPU注意点等の詳細は、必要であれば `git log` の該当コミット時点の本ファイルを参照。
 
 ---
 
@@ -162,9 +150,9 @@ activity_log
 
 ### 5.1 事前準備（運営作業・1回のみ）
 1. コミュニティのMastodonインスタンスで **開発 → 新規アプリ** を作成（または `/api/v1/apps` で登録）。
-2. 必要スコープ: `read:accounts`（プロフィール取得）。完了報告投稿機能を入れるなら `write:statuses` も。
-3. リダイレクトURI: `https://<portal>/api/auth/callback/mastodon`。
-4. 発行された **client_id / client_secret / インスタンスURL** を DigitalOcean App の環境変数（Encrypted）に登録。
+2. 必要スコープ: `read:accounts write:statuses`（プロフィール取得＋PGrit自動投稿。実装済み）。
+3. リダイレクトURI: `https://<本番ドメイン>/api/auth/callback/mastodon`。
+4. 発行された **client_id / client_secret / インスタンスURL** を Vercel の環境変数（Production）に登録。
 
 ### 5.2 実装
 - Auth.js に **Mastodonカスタムプロバイダ**（OAuth2: `/oauth/authorize` → `/oauth/token` → `/api/v1/accounts/verify_credentials`）を定義。
@@ -212,8 +200,8 @@ activity_log
 ## 8. 段階的な開発計画
 
 ### Phase 0｜基盤（〜1週）
-- Next.js + TypeScript プロジェクト作成、DigitalOcean App Platformへデプロイ、DB（DO Managed/Dev DB）接続。
-- Auth.js で Mastodon + Google ログイン。`users` upsert と `last_seen_at`。
+- Next.js + TypeScript プロジェクト作成、Vercelへデプロイ、DB（Neon）接続。
+- Auth.js で PGrit(Mastodon) + Google ログイン。`users` upsert と `last_seen_at`。
 
 ### Phase 1｜MVP（コア機能）
 - `curriculum/*.md` の描画（一覧 → 週ページ、順番に閲覧）。
@@ -262,8 +250,21 @@ web-dev-zemi/
 
 ---
 
-## 11. 次アクション（着手順）
-1. Mastodonインスタンスで OAuthアプリ登録（client_id/secret 取得）。
-2. DigitalOceanアカウント作成（Student Packの$200適用）、**Billing Alert設定**、App Platform + Dev DB を用意。
-3. Next.js雛形 + DigitalOcean + Auth.js（Mastodon/Google）で「ログインできる」状態を作る（Phase 0）。
-4. Markdown描画 + 進捗保存 + ダッシュボードのMVP（Phase 1）。
+## 11. 実装状況（2026-07-01時点）
+
+Phase 0〜1の主要機能は実装・本番稼働済み。詳細な運用手順は [docs/deployment.md](deployment.md) を参照。
+
+- [x] カリキュラム閲覧・進捗チェック（受講生）
+- [x] PGrit(Mastodon) / Google ログイン
+- [x] 運営ダッシュボード（進捗率・非アクティブ検知・ロール変更・アーカイブ・並べ替え）
+- [x] ゼミ会（admin管理＋出席＋受講生アーカイブ＋コメント＋PGrit自動投稿）
+- [x] 個人ダッシュボード（home）
+- [x] 本番デプロイ（Vercel + Neon）
+
+### 残タスク（次アクション）
+1. Discordリンク＋案内文言（要件4の最小版。未着手）
+2. 独自ドメイン（`.tech`, GitHub Student Pack）の設定
+3. 修了/ゼミ幹部（`graduate`）ロールの運用整備（現状は手動変更のみ）
+4. 受講生・卒業生向け「サイト改善プロジェクト」の整備（`CONTRIBUTING.md`・Issueテンプレ等）
+5. 非アクティブ検知のシグナル強化（PGrit投稿頻度なども材料に）
+6. テスト・CI整備
