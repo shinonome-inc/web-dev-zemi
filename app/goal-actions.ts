@@ -2,9 +2,7 @@
 
 import { requireUser } from "@/lib/auth-guard";
 import { getUserMastodonToken } from "@/db/users";
-import { postStatus } from "@/lib/mastodon";
-
-const MASTODON_MAX_CHARS = 500;
+import { buildStatusWithFooter, postStatus } from "@/lib/mastodon";
 
 /** 今日の目標を本人名義でPGrit（Mastodon）に投稿する。 */
 export async function postGoal(
@@ -20,10 +18,7 @@ export async function postGoal(
     return { ok: false, error: "PGritでの再ログインが必要です" };
   }
 
-  const footer = "\n\n#WEB開発ゼミ #本日の目標";
-  const max = MASTODON_MAX_CHARS - footer.length;
-  const status =
-    (body.length > max ? `${body.slice(0, max - 1)}…` : body) + footer;
+  const status = buildStatusWithFooter(body, "\n\n#WEB開発ゼミ #本日の目標");
 
   try {
     await postStatus({ instance, token, status, visibility: "public" });

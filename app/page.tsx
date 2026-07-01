@@ -76,6 +76,9 @@ export default async function HomePage() {
               className="radial-progress text-primary"
               style={{ "--value": pct } as CSSProperties}
               role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
             >
               {pct}%
             </div>
