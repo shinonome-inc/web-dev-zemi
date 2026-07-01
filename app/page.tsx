@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { auth } from "@/auth";
+import { requireUser } from "@/lib/auth-guard";
 import { getAllCompletedItemIds, getWeeklyCheckCount } from "@/db/progress";
 import { getAttendanceCount } from "@/db/meetings";
 import { getCurriculumManifest, getTotalItemCount } from "@/lib/curriculum";
@@ -39,6 +40,9 @@ export default async function HomePage() {
       </section>
     );
   }
+
+  // 除名（アーカイブ）済みユーザーにはダッシュボードを表示しない
+  await requireUser();
 
   const userId = session.user.id;
   const total = getTotalItemCount();
