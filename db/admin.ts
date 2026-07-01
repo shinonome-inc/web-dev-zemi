@@ -57,15 +57,6 @@ export async function getUserById(userId: string) {
   return row ?? null;
 }
 
-/** 指定ユーザーの完了済み項目ID（全週）。 */
-export async function getAllCompletedItemIds(userId: string): Promise<string[]> {
-  const rows = await db
-    .select({ itemId: progress.itemId })
-    .from(progress)
-    .where(eq(progress.userId, userId));
-  return rows.map((r) => r.itemId);
-}
-
 /** staffロールのユーザー数。 */
 export async function countStaff(): Promise<number> {
   const [row] = await db

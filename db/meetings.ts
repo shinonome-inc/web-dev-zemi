@@ -1,6 +1,15 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "./index";
 import { meetingAttendance, meetings, users } from "./schema";
+
+/** 指定ユーザーのゼミ会参加回数。 */
+export async function getAttendanceCount(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ c: count() })
+    .from(meetingAttendance)
+    .where(eq(meetingAttendance.userId, userId));
+  return row?.c ?? 0;
+}
 
 export type MeetingInput = {
   heldOn: string;
