@@ -139,14 +139,22 @@ export default async function HomePage() {
         <PgritComposer canPost={session.user.provider === "mastodon"} />
       </div>
 
-      {/* リンク */}
+      {/* リンク（クリック可能なことが伝わるよう矢印＋ホバーで強調） */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/curriculum"
-          className="card border border-base-300 bg-base-100 transition-colors hover:border-primary"
+          className="group card border border-base-300 bg-base-100 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
         >
           <div className="card-body">
-            <h2 className="card-title text-base">カリキュラム</h2>
+            <h2 className="card-title flex items-center justify-between text-base">
+              カリキュラム
+              <span
+                aria-hidden="true"
+                className="text-primary transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </h2>
             <p className="text-sm text-base-content/70">
               週ごとの学習コンテンツ一覧
             </p>
@@ -154,10 +162,18 @@ export default async function HomePage() {
         </Link>
         <Link
           href="/meetings"
-          className="card border border-base-300 bg-base-100 transition-colors hover:border-primary"
+          className="group card border border-base-300 bg-base-100 transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
         >
           <div className="card-body">
-            <h2 className="card-title text-base">ゼミ会アーカイブ</h2>
+            <h2 className="card-title flex items-center justify-between text-base">
+              ゼミ会アーカイブ
+              <span
+                aria-hidden="true"
+                className="text-primary transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </h2>
             <p className="text-sm text-base-content/70">過去のゼミ会の記録</p>
           </div>
         </Link>
