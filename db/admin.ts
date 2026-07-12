@@ -1,4 +1,4 @@
-import { count, countDistinct, desc, eq, max } from "drizzle-orm";
+import { count, countDistinct, desc, eq } from "drizzle-orm";
 import { db } from "./index";
 import { meetingAttendance, progress, users } from "./schema";
 
@@ -6,10 +6,13 @@ export type UserProgressSummary = {
   id: string;
   displayName: string;
   mastodonAcct: string | null;
+  /** 'mastodon' | 'google'（現状は mastodon のみ） */
+  provider: string;
+  /** プロバイダ側のユーザID（Mastodonのaccount id。最終トゥート取得に使う） */
+  providerUid: string;
   role: (typeof users.$inferSelect)["role"];
+  /** 最終ログイン（OAuth認証）日時 */
   lastSeenAt: Date;
-  /** 最後に進捗チェックした日時（未チェックなら null） */
-  lastCheckedAt: Date | null;
   /** 非表示（アーカイブ）日時。null=表示中 */
   archivedAt: Date | null;
   completed: number;
@@ -17,7 +20,7 @@ export type UserProgressSummary = {
   attendanceCount: number;
 };
 
-/** 全ユーザーの基本情報・完了項目数・最終チェック日時・ゼミ会参加回数を返す。 */
+/** 全ユーザーの基本情報・完了項目数・最終ログイン・ゼミ会参加回数を返す。 */
 export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> {
   // progress と meeting_attendance を同時に結合すると件数が掛け算になるため
   // countDistinct で重複を除いて数える。
@@ -26,9 +29,10 @@ export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> 
       id: users.id,
       displayName: users.displayName,
       mastodonAcct: users.mastodonAcct,
+      provider: users.provider,
+      providerUid: users.providerUid,
       role: users.role,
       lastSeenAt: users.lastSeenAt,
-      lastCheckedAt: max(progress.completedAt),
       archivedAt: users.archivedAt,
       completed: countDistinct(progress.id),
       attendanceCount: countDistinct(meetingAttendance.id),

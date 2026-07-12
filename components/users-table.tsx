@@ -13,15 +13,22 @@ export type UserRow = {
   role: string;
   completed: number;
   pct: number;
-  /** 最終アクティブ（ログイン/チェックの新しい方）の表示用 */
-  lastActiveLabel: string;
+  /** 最終ログイン（OAuth認証）日時の表示用 */
+  lastLoginLabel: string;
+  /** 最終ログインからの経過日数 */
   daysInactive: number;
   inactive: boolean;
   archived: boolean;
   attendanceCount: number;
+  /** 最終トゥート日時の表示用。取得できない（鍵/失敗）場合は null */
+  lastTootLabel: string | null;
+  /** 最終トゥートからの経過日数。取得不可は null */
+  daysSinceToot: number | null;
+  /** 7日以内にトゥートしているか */
+  tootedRecently: boolean;
 };
 
-type SortKey = "name" | "pct" | "days" | "attend";
+type SortKey = "name" | "pct" | "days" | "attend" | "toot";
 
 /** 状態表示：背景なし・光る丸マーク＋色付き文字 */
 function StatusIndicator({
@@ -51,6 +58,42 @@ function StatusIndicator({
   );
 }
 
+/** 最終トゥートのセル。7日以内は緑・それ以外はグレー・取得不可はダッシュ。 */
+function TootCell({
+  label,
+  daysSince,
+  recent,
+}: {
+  label: string | null;
+  daysSince: number | null;
+  recent: boolean;
+}) {
+  if (!label) {
+    return (
+      <span className="text-base-content/40" title="公開投稿を取得できませんでした">
+        —
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap ${
+        recent ? "font-medium text-success" : "text-base-content/70"
+      }`}
+    >
+      {recent && (
+        <span className="h-2 w-2 shrink-0 rounded-full bg-current shadow-[0_0_6px_2px_currentColor]" />
+      )}
+      <span>
+        {label}
+        <span className="block text-xs text-base-content/50">
+          {daysSince}日前
+        </span>
+      </span>
+    </span>
+  );
+}
+
 export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) {
   const router = useRouter();
   const [key, setKey] = useState<SortKey>("days");
@@ -73,7 +116,13 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
       if (key === "name") d = a.displayName.localeCompare(b.displayName, "ja");
       else if (key === "pct") d = a.pct - b.pct;
       else if (key === "attend") d = a.attendanceCount - b.attendanceCount;
-      else d = a.daysInactive - b.daysInactive;
+      else if (key === "toot") {
+        // 取得不可（null）は最も古い扱いで末尾に寄せる
+        const ad = a.daysSinceToot ?? Number.POSITIVE_INFINITY;
+        const bd = b.daysSinceToot ?? Number.POSITIVE_INFINITY;
+        // 両方 Infinity（ともに取得不可）は NaN を避けて同値扱い
+        d = ad === bd ? 0 : ad - bd;
+      } else d = a.daysInactive - b.daysInactive;
       return asc ? d : -d;
     });
     return copy;
@@ -131,7 +180,8 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
               <th>ロール</th>
               {header("進捗", "pct", "w-48")}
               {header("ゼミ会参加", "attend")}
-              {header("最終アクティブ", "days")}
+              {header("最終ログイン", "days")}
+              {header("最終トゥート", "toot")}
               <th>状態</th>
               <th>操作</th>
             </tr>
@@ -178,10 +228,17 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                 </td>
                 <td className="text-sm tabular-nums">{u.attendanceCount}回</td>
                 <td className="text-sm text-base-content/70">
-                  {u.lastActiveLabel}
+                  {u.lastLoginLabel}
                   <div className="text-xs text-base-content/50">
                     {u.daysInactive}日前
                   </div>
+                </td>
+                <td className="text-sm">
+                  <TootCell
+                    label={u.lastTootLabel}
+                    daysSince={u.daysSinceToot}
+                    recent={u.tootedRecently}
+                  />
                 </td>
                 <td>
                   <StatusIndicator archived={u.archived} inactive={u.inactive} />
@@ -211,7 +268,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
             ))}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-base-content/60">
+                <td colSpan={8} className="text-center text-base-content/60">
                   表示するユーザーがいません。
                 </td>
               </tr>

@@ -13,6 +13,46 @@ export function buildStatusWithFooter(body: string, footer: string): string {
   return `${trimmed}…${footer}`;
 }
 
+/**
+ * accounts/:id/statuses のレスポンス（配列）から最新ステータスの投稿日時を取り出す。
+ * 配列でない・空・created_at 欠落・不正日付はいずれも null。
+ */
+export function parseLatestStatusAt(payload: unknown): Date | null {
+  if (!Array.isArray(payload)) return null;
+  const first = payload[0] as { created_at?: unknown } | undefined;
+  if (!first || typeof first.created_at !== "string") return null;
+  const at = new Date(first.created_at);
+  return Number.isNaN(at.getTime()) ? null : at;
+}
+
+/**
+ * 指定 Mastodon アカウントの「最終トゥート日時」を公開APIから取得する。
+ * 認証不要（公開・未収載の投稿が対象）。鍵アカウントや取得失敗時は null。
+ * 管理画面の一覧描画をブロックしないよう短いタイムアウトを設ける。
+ */
+export async function fetchLastStatusAt(opts: {
+  instance: string;
+  accountId: string;
+  timeoutMs?: number;
+}): Promise<Date | null> {
+  const instance = opts.instance.replace(/\/$/, "");
+  const url = `${instance}/api/v1/accounts/${encodeURIComponent(
+    opts.accountId,
+  )}/statuses?limit=1`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(opts.timeoutMs ?? 4000),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return parseLatestStatusAt(await res.json());
+  } catch {
+    // ネットワーク不通・タイムアウト・JSON崩れなどは「取得不可」として扱う
+    return null;
+  }
+}
+
 /** Mastodonに本人名義でステータス（トゥート）を投稿する。 */
 export async function postStatus(opts: {
   instance: string;
