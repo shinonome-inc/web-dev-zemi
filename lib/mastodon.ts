@@ -14,39 +14,43 @@ export function buildStatusWithFooter(body: string, footer: string): string {
 }
 
 /**
- * accounts/:id/statuses のレスポンス（配列）から最新ステータスの投稿日時を取り出す。
- * 配列でない・空・created_at 欠落・不正日付はいずれも null。
+ * verify_credentials 等が返す Account から last_status_at（最終トゥート日）を取り出す。
+ * last_status_at は日付のみ（YYYY-MM-DD）。欠落・null・不正日付はいずれも null。
  */
-export function parseLatestStatusAt(payload: unknown): Date | null {
-  if (!Array.isArray(payload)) return null;
-  const first = payload[0] as { created_at?: unknown } | undefined;
-  if (!first || typeof first.created_at !== "string") return null;
-  const at = new Date(first.created_at);
+export function parseLastStatusAt(payload: unknown): Date | null {
+  if (typeof payload !== "object" || payload === null) return null;
+  const value = (payload as { last_status_at?: unknown }).last_status_at;
+  if (typeof value !== "string") return null;
+  const at = new Date(value);
   return Number.isNaN(at.getTime()) ? null : at;
 }
 
 /**
- * 指定 Mastodon アカウントの「最終トゥート日時」を公開APIから取得する。
- * 認証不要（公開・未収載の投稿が対象）。鍵アカウントや取得失敗時は null。
+ * 本人アクセストークンで verify_credentials を叩き、最終トゥート日時を取得する。
+ * スコープ read:accounts で取得でき、インスタンスの secure mode 等にも影響されない
+ * （公開APIの無認証取得より確実）。トークン無効・取得失敗時は null。
  * 管理画面の一覧描画をブロックしないよう短いタイムアウトを設ける。
  */
-export async function fetchLastStatusAt(opts: {
+export async function fetchLastStatusAtByToken(opts: {
   instance: string;
-  accountId: string;
+  token: string;
   timeoutMs?: number;
 }): Promise<Date | null> {
   const instance = opts.instance.replace(/\/$/, "");
-  const url = `${instance}/api/v1/accounts/${encodeURIComponent(
-    opts.accountId,
-  )}/statuses?limit=1`;
   try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(opts.timeoutMs ?? 4000),
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${instance}/api/v1/accounts/verify_credentials`,
+      {
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${opts.token}`,
+        },
+        signal: AbortSignal.timeout(opts.timeoutMs ?? 4000),
+        cache: "no-store",
+      },
+    );
     if (!res.ok) return null;
-    return parseLatestStatusAt(await res.json());
+    return parseLastStatusAt(await res.json());
   } catch {
     // ネットワーク不通・タイムアウト・JSON崩れなどは「取得不可」として扱う
     return null;

@@ -6,10 +6,8 @@ export type UserProgressSummary = {
   id: string;
   displayName: string;
   mastodonAcct: string | null;
-  /** 'mastodon' | 'google'（現状は mastodon のみ） */
+  /** 'mastodon' | 'google'（現状は mastodon のみ）。最終トゥート取得の対象判定に使う */
   provider: string;
-  /** プロバイダ側のユーザID（Mastodonのaccount id。最終トゥート取得に使う） */
-  providerUid: string;
   role: (typeof users.$inferSelect)["role"];
   /** 最終アクセス（訪問で更新）日時 */
   lastSeenAt: Date;
@@ -30,7 +28,6 @@ export async function getUsersProgressSummary(): Promise<UserProgressSummary[]> 
       displayName: users.displayName,
       mastodonAcct: users.mastodonAcct,
       provider: users.provider,
-      providerUid: users.providerUid,
       role: users.role,
       lastSeenAt: users.lastSeenAt,
       archivedAt: users.archivedAt,

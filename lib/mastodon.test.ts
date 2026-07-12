@@ -1,75 +1,71 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildStatusWithFooter,
-  fetchLastStatusAt,
+  fetchLastStatusAtByToken,
   MASTODON_MAX_CHARS,
-  parseLatestStatusAt,
+  parseLastStatusAt,
 } from "./mastodon";
 
-describe("parseLatestStatusAt", () => {
-  it("配列先頭の created_at を Date で返す", () => {
-    const at = parseLatestStatusAt([
-      { created_at: "2026-07-01T12:00:00.000Z" },
-      { created_at: "2026-06-01T00:00:00.000Z" },
-    ]);
-    expect(at?.toISOString()).toBe("2026-07-01T12:00:00.000Z");
+describe("parseLastStatusAt", () => {
+  it("Account の last_status_at を Date で返す", () => {
+    const at = parseLastStatusAt({ last_status_at: "2026-07-12" });
+    expect(at?.getTime()).toBe(new Date("2026-07-12").getTime());
   });
 
-  it("空配列は null", () => {
-    expect(parseLatestStatusAt([])).toBeNull();
+  it("オブジェクトでない入力は null", () => {
+    expect(parseLastStatusAt(null)).toBeNull();
+    expect(parseLastStatusAt("2026-07-12")).toBeNull();
+    expect(parseLastStatusAt([{ last_status_at: "2026-07-12" }])).toBeNull();
   });
 
-  it("配列でない入力は null", () => {
-    expect(parseLatestStatusAt(null)).toBeNull();
-    expect(parseLatestStatusAt({ created_at: "2026-07-01T00:00:00Z" })).toBeNull();
-    expect(parseLatestStatusAt("2026-07-01")).toBeNull();
-  });
-
-  it("created_at 欠落・非文字列・不正日付は null", () => {
-    expect(parseLatestStatusAt([{}])).toBeNull();
-    expect(parseLatestStatusAt([{ created_at: 12345 }])).toBeNull();
-    expect(parseLatestStatusAt([{ created_at: "not-a-date" }])).toBeNull();
+  it("last_status_at の欠落・null・不正日付は null", () => {
+    expect(parseLastStatusAt({})).toBeNull();
+    expect(parseLastStatusAt({ last_status_at: null })).toBeNull();
+    expect(parseLastStatusAt({ last_status_at: "not-a-date" })).toBeNull();
   });
 });
 
-describe("fetchLastStatusAt", () => {
+describe("fetchLastStatusAtByToken", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it("200応答なら最新投稿日時を返し、末尾スラッシュを正規化したURLを叩く", async () => {
+  it("200応答なら最終トゥート日時を返し、Bearerトークン付きで verify_credentials を叩く", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => [{ created_at: "2026-07-01T00:00:00.000Z" }],
+      json: async () => ({ last_status_at: "2026-07-12" }),
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const at = await fetchLastStatusAt({
+    const at = await fetchLastStatusAtByToken({
       instance: "https://pgrit.example/",
-      accountId: "42",
+      token: "secret-token",
     });
 
-    expect(at?.toISOString()).toBe("2026-07-01T00:00:00.000Z");
+    expect(at?.getTime()).toBe(new Date("2026-07-12").getTime());
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock.mock.calls[0][0]).toBe(
-      "https://pgrit.example/api/v1/accounts/42/statuses?limit=1",
+      "https://pgrit.example/api/v1/accounts/verify_credentials",
+    );
+    expect(fetchMock.mock.calls[0][1]?.headers?.Authorization).toBe(
+      "Bearer secret-token",
     );
   });
 
-  it("非200応答は null", async () => {
+  it("非200応答（トークン無効等）は null", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ ok: false, json: async () => [] }),
+      vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }),
     );
     expect(
-      await fetchLastStatusAt({ instance: "https://x", accountId: "1" }),
+      await fetchLastStatusAtByToken({ instance: "https://x", token: "t" }),
     ).toBeNull();
   });
 
   it("fetch が例外（タイムアウト等）なら null", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("timeout")));
     expect(
-      await fetchLastStatusAt({ instance: "https://x", accountId: "1" }),
+      await fetchLastStatusAtByToken({ instance: "https://x", token: "t" }),
     ).toBeNull();
   });
 });

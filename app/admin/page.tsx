@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth-guard";
 import { getUsersProgressSummary } from "@/db/admin";
+import { getUserMastodonToken } from "@/db/users";
 import { getTotalItemCount } from "@/lib/curriculum";
-import { fetchLastStatusAt } from "@/lib/mastodon";
+import { fetchLastStatusAtByToken } from "@/lib/mastodon";
 import { UsersTable, type UserRow } from "@/components/users-table";
 
 export const metadata = { title: "運営ダッシュボード | はじめてのWEB開発ゼミ" };
@@ -28,18 +29,17 @@ export default async function AdminDashboardPage() {
   const summary = await getUsersProgressSummary();
   const now = Date.now();
 
-  // 各メンバーの最終トゥートをMastodon公開APIから並列取得（認証不要）。
-  // アーカイブ済み・非Mastodon・未設定は取得をスキップし、失敗時は null。
+  // 各メンバーの最終トゥートを、本人トークンの verify_credentials から並列取得。
+  // アーカイブ済み・非Mastodon・トークン無しは取得をスキップし、失敗時は null。
   const instance = process.env.MASTODON_INSTANCE;
   const lastToots = await Promise.all(
-    summary.map((u) =>
-      instance &&
-      u.provider === "mastodon" &&
-      u.providerUid &&
-      u.archivedAt === null
-        ? fetchLastStatusAt({ instance, accountId: u.providerUid })
-        : Promise.resolve(null),
-    ),
+    summary.map(async (u) => {
+      if (!instance || u.provider !== "mastodon" || u.archivedAt !== null) {
+        return null;
+      }
+      const token = await getUserMastodonToken(u.id);
+      return token ? fetchLastStatusAtByToken({ instance, token }) : null;
+    }),
   );
 
   const rows: UserRow[] = summary.map((u, i) => {
