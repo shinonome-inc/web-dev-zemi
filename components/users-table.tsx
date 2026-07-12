@@ -247,7 +247,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                   {u.archived ? (
                     <button
                       type="button"
-                      className="btn btn-ghost btn-xs"
+                      className="btn btn-ghost btn-xs whitespace-nowrap"
                       disabled={pending}
                       onClick={() => onArchive(u.id, false)}
                     >
@@ -256,7 +256,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                   ) : (
                     <button
                       type="button"
-                      className="btn btn-ghost btn-xs text-error"
+                      className="btn btn-outline btn-error btn-xs whitespace-nowrap"
                       disabled={pending}
                       onClick={() => onArchive(u.id, true)}
                     >
