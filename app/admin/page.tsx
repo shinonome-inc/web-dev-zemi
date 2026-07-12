@@ -43,7 +43,7 @@ export default async function AdminDashboardPage() {
   );
 
   const rows: UserRow[] = summary.map((u, i) => {
-    // 最終アクティブ＝最終ログイン（OAuth認証）日時
+    // 最終アクティブ＝最終アクセス日時（アクセスのたびに更新される）
     const daysInactive = Math.floor((now - u.lastSeenAt.getTime()) / DAY_MS);
     const lastTootAt = lastToots[i];
     const daysSinceToot = lastTootAt
@@ -56,7 +56,7 @@ export default async function AdminDashboardPage() {
       role: u.role,
       completed: u.completed,
       pct: total > 0 ? Math.round((u.completed / total) * 100) : 0,
-      lastLoginLabel: formatDate(u.lastSeenAt),
+      lastAccessLabel: formatDate(u.lastSeenAt),
       daysInactive,
       inactive: daysInactive > INACTIVE_AFTER_DAYS,
       archived: u.archivedAt !== null,
@@ -80,7 +80,7 @@ export default async function AdminDashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight">運営ダッシュボード</h1>
           <p className="text-sm text-base-content/70">
             受講生の進捗状況（全{total}項目）。{INACTIVE_AFTER_DAYS}日を超えて
-            ログインがないと「非アクティブ」になります。最終トゥートはPGritの
+            アクセスがないと「非アクティブ」になります。最終トゥートはPGritの
             公開投稿から取得します（{TOOT_RECENT_DAYS}日以内は緑表示）。
           </p>
         </div>

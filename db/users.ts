@@ -81,6 +81,14 @@ export async function getUserMastodonToken(
   return row?.token ? decryptToken(row.token) : null;
 }
 
+/** アクセス日時（lastSeenAt）を現在時刻に更新する（最終アクセス検知用）。 */
+export async function updateLastSeen(userId: string): Promise<void> {
+  await db
+    .update(users)
+    .set({ lastSeenAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
 /** DB上のロールを取得（権限判定はJWTでなくDBを正とするため）。不在なら null。 */
 export async function getUserRole(
   userId: string,

@@ -11,7 +11,7 @@ export type UserProgressSummary = {
   /** プロバイダ側のユーザID（Mastodonのaccount id。最終トゥート取得に使う） */
   providerUid: string;
   role: (typeof users.$inferSelect)["role"];
-  /** 最終ログイン（OAuth認証）日時 */
+  /** 最終アクセス（訪問で更新）日時 */
   lastSeenAt: Date;
   /** 非表示（アーカイブ）日時。null=表示中 */
   archivedAt: Date | null;

@@ -13,9 +13,9 @@ export type UserRow = {
   role: string;
   completed: number;
   pct: number;
-  /** 最終ログイン（OAuth認証）日時の表示用 */
-  lastLoginLabel: string;
-  /** 最終ログインからの経過日数 */
+  /** 最終アクセス（訪問で更新）日時の表示用 */
+  lastAccessLabel: string;
+  /** 最終アクセスからの経過日数 */
   daysInactive: number;
   inactive: boolean;
   archived: boolean;
@@ -180,7 +180,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
               <th>ロール</th>
               {header("進捗", "pct", "w-48")}
               {header("ゼミ会参加", "attend")}
-              {header("最終ログイン", "days")}
+              {header("最終アクセス", "days")}
               {header("最終トゥート", "toot")}
               <th>状態</th>
               <th>操作</th>
@@ -228,7 +228,7 @@ export function UsersTable({ rows, total }: { rows: UserRow[]; total: number }) 
                 </td>
                 <td className="text-sm tabular-nums">{u.attendanceCount}回</td>
                 <td className="text-sm text-base-content/70">
-                  {u.lastLoginLabel}
+                  {u.lastAccessLabel}
                   <div className="text-xs text-base-content/50">
                     {u.daysInactive}日前
                   </div>
