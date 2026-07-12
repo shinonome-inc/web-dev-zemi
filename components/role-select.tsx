@@ -32,7 +32,7 @@ export function RoleSelect({
   return (
     <div>
       <select
-        className="select select-bordered select-sm"
+        className="select select-bordered select-sm w-32"
         value={value}
         disabled={pending}
         onChange={onChange}
